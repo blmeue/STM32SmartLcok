@@ -7,6 +7,7 @@
 #include "oled.h"
 
 extern unsigned char long_view;
-
+extern unsigned int sec1;
+extern unsigned int sec2;
 
 #endif

@@ -7,10 +7,18 @@ extern unsigned char view;
 extern unsigned char figuer_count;
 extern unsigned char figure_flag;
 extern unsigned char keep_menu;
-
+extern unsigned char key_user_flag;
+extern unsigned char key_admin_flag;
 
 void main_menu(void);
-void denglu_jduge(void);
+void denglu_input(void);
+
+void admin_fail(void);
+void admin_judge(void);
+void admin_input(void);
+void forbid_admin(void);
+
+
 void Unlock_success(void);
 void Unlock_failed(void);
 void admin_menu(void);
@@ -35,6 +43,7 @@ void delete_success(void);
 void figuer_empty(void);
 void delete_fail(void);
 
+void forbid_user(void);
 
 
 

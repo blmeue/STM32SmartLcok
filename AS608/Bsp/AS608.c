@@ -707,7 +707,7 @@ void press_FR(void)
 {
   SearchResult seach;
   uint8_t ensure;
-  char str[256];
+//  char str[256];
   //while(1)
   //{
     ensure = PS_GetImage();
@@ -721,25 +721,38 @@ void press_FR(void)
         if(ensure == 0x00) //搜索成功
         {
            
-		   printf("指纹验证成功");
+//		   printf("指纹验证成功");
            figuer_count=0;
-           sprintf(str, " ID:%d 得分:%d  view:%d", seach.pageID, seach.mathscore,view);
-		   printf("%s\r\n",str);
+//           sprintf(str, " ID:%d 得分:%d  view:%d", seach.pageID, seach.mathscore,view);
+//		   printf("%s\r\n",str);
+            
+            //HAL_Delay(1000);
            OLED_CLS();
+           SYN_FrameInfo(0,"[v7][m1][t5]解锁成功");
            view=1;
+           //HAL_Delay(1000);
            HAL_Delay(1000);
             return;
            // break;
         }
         else
         {
-		  printf("验证失败\r\n");
+		  //printf("验证失败\r\n");
           OLED_CLS();
+           
           view=2;
+          //HAL_Delay(1000);
           figuer_count++;
-          if(figuer_count>3)
+          if(figuer_count==3)
           {
               figure_flag=1;
+              SYN_FrameInfo(2,"[v7][m1][t5]指纹验证失败 禁用指纹"); 
+              figuer_count=0;
+              //HAL_Delay(1000);
+          }
+          else
+          {
+              SYN_FrameInfo(2,"[v7][m1][t5]指纹验证失败");
           }
           HAL_Delay(1000);
             return;

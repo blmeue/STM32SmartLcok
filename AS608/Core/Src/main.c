@@ -141,7 +141,7 @@ int main(void)
     
     HAL_TIM_Base_Start_IT(&htim3);
     //初始化指纹模块
-    //PS_StaGPIO_Init();
+    PS_StaGPIO_Init();
     
     //清空flash缓存
 //    Store_Clear();
@@ -222,6 +222,8 @@ int main(void)
           if(temp==uart2_rx_len)
               usart_disp();
       } 
+//      SYN_FrameInfo(2,"[v7][m1][t5]解锁失败，请重新尝试");
+//	    HAL_Delay(1000);
 //      
 //      if(uart1_rx_len!=0)
 //      {

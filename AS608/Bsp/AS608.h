@@ -6,6 +6,7 @@
 #include "oled.h"
 #include "hhStore.h"
 #include "key.h"
+#include "SYN6288.h"
  
 #define CharBuffer1 0x01
 #define CharBuffer2 0x02

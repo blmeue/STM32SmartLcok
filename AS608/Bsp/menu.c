@@ -10,26 +10,36 @@
 
 int keynum;
 
-uint16_t input_user_password[6]={0};
-uint32_t k=0;
+uint16_t input_user_password[6]={0};//保存输入的解锁密码
+uint32_t k=0;//输入的下标
 
-unsigned char user_flag=0;
-unsigned char admin_flag=0;
+uint16_t input_admin_password[6]={0};//保存输入的管理员密码
+uint32_t k_admin=0;//输入的管理员密码下标
+
+unsigned char user_flag=0;//判断修改密码是否成功
+unsigned char admin_flag=0;//判断修改管理员密码是否成功
 
 unsigned char unlock=0;
 
-unsigned char line_flag=0;
-unsigned char figure_flag=0;
-unsigned char view=0;
+unsigned char line_flag=0;//选择菜单
+unsigned char figure_flag=0;//指纹是否禁用标志
+unsigned char view=0;//界面
 
-uint16_t admin_data[6]={0};
-uint16_t user_data[6]={0};
+unsigned char key_user_count=0;//密码输入错误次数
+unsigned char key_user_flag=0;//密码输入禁用标志
 
-uint16_t admin_index=0;//解锁密码下标
-uint16_t user_index=0;//管理员密码下标
+unsigned char key_admin_count=0;//管理员密码输入错误次数
+unsigned char key_admin_flag=0;//管理员密码输入禁用标志
 
-unsigned char figuer_count=0;
+uint16_t admin_data[6]={0};//新的管理员密码
+uint16_t user_data[6]={0};//新的解锁密码
 
+uint16_t admin_index=0;//新的解锁密码下标
+uint16_t user_index=0;//新的管理员密码下标
+
+unsigned char figuer_count=0;//指纹验证失败次数
+
+//上锁界面
 void main_menu(void)
 {
      OLED_ShowChar(0+16,0,'S',16);
@@ -66,38 +76,43 @@ uint8_t SYN_RecoverCom[] = {0XFD, 0X00, 0X02, 0X04, 0XFB}; //恢复合成
 uint8_t SYN_ChackCom[] = {0XFD, 0X00, 0X02, 0X21, 0XDE}; //状态查询
 uint8_t SYN_PowerDownCom[] = {0XFD, 0X00, 0X02, 0X88, 0X77}; //进入POWER DOWN 状态命令
 
-
+//判断密码是否正确
 void denglu_jduge(void)
 {
     //判断输入密码是否正确
     if(memcmp(input_user_password,Store_Data,sizeof(input_user_password))==0)
     {
         //解锁成功
-        //Unlock_success();
-        //unlock=1;
-        //YS_SYN_Set(SYN_RecoverCom);
         OLED_CLS();
-        
-        //SYN_FrameInfo(2,"[v7][m1][t5]解锁成功");
         view=1;
-        //HAL_Delay(1000);
-        //HAL_Delay(1000);
-        //memset(input_user_password,0,sizeof(input_user_password));
+        
+        SYN_FrameInfo(2,"[v7][m1][t5]开锁成功");
+        HAL_Delay(1000);
+        key_user_count=0;
+        key_user_flag=0;
     }
     else
     {
         //解锁失败
         OLED_CLS();
-        //SYN_FrameInfo(0,"[v7][m1][t5]解锁失败");
-        //HAL_Delay(1000);
-        view=2;
-        //HAL_Delay(1000);
-        //HAL_Delay(1000);
+        
+        SYN_FrameInfo(0,"[v7][m1][t5]解锁失败");
         k=0;
-        //memset(input_user_password,0,sizeof(input_user_password));
-        //Unlock_failed();
+        HAL_Delay(1000);
+        key_user_count++;
+        if(key_user_count==3)
+        {
+            key_user_flag=1;
+            OLED_CLS();
+            view=17;
+        }
+        else
+        {
+           view=2; 
+        }
     }
-    //memset(input_user_password,0,sizeof(input_user_password));
+    memset(input_user_password,0,sizeof(input_user_password));
+    k=0;
 }
 
 //解锁成功界面
@@ -109,17 +124,17 @@ void Unlock_success(void)
      OLED_ShowCN(48,2,17); //功
      OLED_ShowCN(90,6,23); //设
      OLED_ShowCN(106,6,24); //置
-     //view=1;
-    figure_flag=0;
-    figuer_count=0;
- //   memset(input_user_password,0,sizeof(input_user_password));
-//     unlock=1;
+     figure_flag=0;
+     figuer_count=0;
+     k_admin=0;
+     memset(input_admin_password,0,sizeof(input_admin_password));
+     k=0;
+     memset(input_user_password,0,sizeof(input_user_password));
 }
 
+//解锁失败界面
 void Unlock_failed(void)
 {
-   // OLED_CLS();
-     //view=2;
      OLED_ShowCN(0,2,12)  ; //解
      OLED_ShowCN(16,2,6)  ; //锁
      OLED_ShowCN(32,2,18) ; //失
@@ -128,7 +143,7 @@ void Unlock_failed(void)
      OLED_ShowCN(80,2,9)  ; //请
      OLED_ShowCN(96,2,20) ; //重
      OLED_ShowCN(112,2,21); //试 
-     if(figure_flag==0)
+     if(figure_flag==0&&key_user_flag==0)
      {
          Figure();//指纹解锁模块
          OLED_ClearGivenChar(0);
@@ -144,7 +159,27 @@ void Unlock_failed(void)
      
 }
 
-void admin_jduge(void)
+//禁止输入用户密码界面
+void forbid_user(void)
+{
+    //密码错误三次，秒后再试
+    OLED_ShowCN(16,0,13); //密
+    OLED_ShowCN(32,0,14); //码
+    OLED_ShowCN(48,0,58); //错
+    OLED_ShowCN(64,0,59); //误
+    OLED_ShowNum(80,0,3,1,16);//3
+    OLED_ShowCN(96-8,0,60); //次
+    
+    OLED_ShowNum(16,2,30-sec1,2,16);//3
+    OLED_ShowCN(32,2,61); //秒
+    OLED_ShowCN(48,2,62); //后
+    OLED_ShowCN(64,2,54); //再
+    OLED_ShowCN(80,2,21); //试
+    
+}
+
+//输入管理员密码界面
+void admin_input(void)
 {
      OLED_ShowCN(32,0,9)  ; //请
      OLED_ShowCN(48,0,10); //输
@@ -155,8 +190,91 @@ void admin_jduge(void)
      OLED_ShowCN(48,2,13); //密
      OLED_ShowCN(64,2,14); //码
      OLED_ShowCN(80,2,15); //: 
+    
+    OLED_ShowCN(0,6,46);  //清
+    OLED_ShowCN(16,6,47); //除
+    
+    //返回，回到系统设置界面
+    OLED_ShowCN(90,6,44);  //返
+    OLED_ShowCN(106,6,45); //回  
 }
 
+//判断管理员密码是否正确
+void admin_judge(void)
+{
+    //判断输入密码是否正确
+    if(memcmp(input_admin_password,Store_Admin,sizeof(input_admin_password))==0)
+    {
+        //管理员密码正确，进入设置模式（管理员模式）
+        OLED_CLS();
+        view=3;
+        SYN_FrameInfo(2,"[v7][m1][t5]进入管理员模式");
+        k_admin=0;
+        HAL_Delay(1000);
+        key_admin_count=0;
+        key_user_flag=0;
+    }
+    else
+    {
+        //管理员密码错误
+        OLED_CLS();
+        //view=19;
+        SYN_FrameInfo(2,"[v7][m1][t5]管理员密码错误");
+        k_admin=0;
+        HAL_Delay(1000);
+        key_admin_count++;
+        if(key_admin_count==3)
+        {
+            key_admin_flag=1;
+        }
+        else
+        {
+            view=19;
+        }
+    }
+    memset(input_admin_password,0,sizeof(input_admin_password));
+}
+
+//管理员登录失败
+void admin_fail(void)
+{
+    //管理员密码错误
+     OLED_ShowCN(16,0,27)  ; //管
+     OLED_ShowCN(32,0,28)  ; //理
+     OLED_ShowCN(48,0,29) ; //员
+     OLED_ShowCN(64,0,13); //密
+     OLED_ShowCN(80,0,14); //码
+     OLED_ShowCN(96,0,58); //错
+     OLED_ShowCN(112,0,59); //误
+    
+     OLED_ShowCN(48,2,9)  ; //请
+     OLED_ShowCN(64,2,20) ; //重
+     OLED_ShowCN(80,2,21); //试 
+}
+
+//禁用管理员登录
+void forbid_admin(void)
+{
+    //管理员密码错误三次，秒后再试
+    OLED_ShowCN(16,0,27); //管
+    OLED_ShowCN(32,0,28); //理
+    OLED_ShowCN(48,0,29); //员
+    OLED_ShowCN(64,0,13); //密
+    OLED_ShowCN(80,0,14); //码
+    OLED_ShowCN(96,0,58); //错
+    OLED_ShowCN(112,0,59); //误
+    
+    OLED_ShowNum(0,2,3,1,16);//3
+    OLED_ShowCN(16,2,60); //次
+    OLED_ShowCN(32,2,9); //请
+    OLED_ShowNum(48,2,30-sec2,2,16);//3
+    OLED_ShowCN(64,2,61); //秒
+    OLED_ShowCN(80,2,62); //后
+    OLED_ShowCN(96,2,54); //再
+    OLED_ShowCN(112,2,21); //试
+}
+
+//菜单页面
 void admin_menu(void)
 {
     //1、修改解锁密码
@@ -218,8 +336,14 @@ void admin_menu(void)
     
     OLED_ShowCN(90,6,44); //返
     OLED_ShowCN(106,6,45); //回
+    
+    k_admin=0;
+    memset(input_admin_password,0,sizeof(input_admin_password));
+    k=0;
+    memset(input_user_password,0,sizeof(input_user_password));
 }
 
+//指纹解锁模块
 void Figure(void)
 {
     //有指纹按下时
@@ -231,6 +355,7 @@ void Figure(void)
 
 
 
+//修改解锁密码页面
 void change_user(void)
 {
      OLED_ShowCN(0,0,9)  ; //请
@@ -251,6 +376,7 @@ void change_user(void)
      OLED_ShowCN(16,6,47); //除
 }
 
+//修改成功提示
 void changed_success_view(void)
 {
        OLED_ShowCN(0,2,25)  ; //修
@@ -259,6 +385,7 @@ void changed_success_view(void)
        OLED_ShowCN(48,2,17); //功
 }
 
+//修改解锁失败界面
 void changed_user_fail_view(void)
 {
     OLED_ShowCN(0,2,25)  ; //修
@@ -278,6 +405,7 @@ void changed_user_fail_view(void)
     OLED_ShowCN(106,6,45); //回  
 }
 
+//修改管理员密码失败界面
 void changed_admin_fail_view(void)
 {
     OLED_ShowCN(0,2,25)  ; //修
@@ -287,7 +415,7 @@ void changed_admin_fail_view(void)
     OLED_ShowCN(64,2,22) ; //，
     OLED_ShowCN(80,2,9)  ; //请
     OLED_ShowCN(96,2,20) ; //重
-    OLED_ShowCN(106,2,21); //试 
+    OLED_ShowCN(112,2,21); //试 
     
     OLED_ShowCN(0,6,46);  //清
     OLED_ShowCN(16,6,47); //除
@@ -297,6 +425,7 @@ void changed_admin_fail_view(void)
     OLED_ShowCN(106,6,45); //回  
 }
 
+//判断修改解锁密码是否成功
 void change_user_fail_success(void)
 {
     if(user_flag==1)//修改用户密码成功
@@ -304,7 +433,6 @@ void change_user_fail_success(void)
         //修改成功界面
         OLED_CLS();
         view=8;
-
        memcpy(Store_Data,user_data,sizeof(user_data));
        Store_Save();        
        user_flag=0;  
@@ -320,6 +448,7 @@ void change_user_fail_success(void)
     memset(user_data,0,sizeof(user_data));
 }
 
+//判断修改管理员密码是否成功
 void change_admin_fail_success(void)
 {
     if(admin_flag==1)//修改管理员密码成功
@@ -342,6 +471,7 @@ void change_admin_fail_success(void)
     memset(admin_data,0,sizeof(admin_data));
 }
 
+//修改管理员密码界面
 void change_admin(void)
 {
      OLED_ShowCN(16,0,9) ; //请
@@ -355,14 +485,13 @@ void change_admin(void)
      OLED_ShowCN(48,2,13); //密
      OLED_ShowCN(64,2,14); //码
      OLED_ShowCN(80,2,15); //: 
-    
      OLED_ShowCN(90,6,44); //返
      OLED_ShowCN(106,6,45); //回
-     
      OLED_ShowCN(0,6,46);  //清
      OLED_ShowCN(16,6,47); //除
 }
 
+//指纹添加成功提示界面
 void add_success(void)
 {
     OLED_ShowCN(16,2,30) ; //添
@@ -371,6 +500,7 @@ void add_success(void)
     OLED_ShowCN(48+16,2,17); //功
 }
 
+//指纹添加失败提示界面
 void add_fail(void)
 {
     OLED_ShowCN(16,2,30) ; //添
@@ -379,7 +509,7 @@ void add_fail(void)
     OLED_ShowCN(48+16,2,19); //败
 }
 
-//指纹已经满了
+//指纹已经满了，指纹添加失败
 void figuer_fill(void)
 {
     //已添加3个指纹，无法继续添加
@@ -395,6 +525,7 @@ void figuer_fill(void)
     OLED_ShowCN(96,4,31) ; //加
 }
 
+//添加指纹界面
 void add_figure(void)
 {
     OLED_ShowCN(0,0,9) ; //请
@@ -414,6 +545,7 @@ void add_figure(void)
     Add_FR();
 }
 
+//删除指纹界面
 void delete_figure(void)
 {
     OLED_ShowCN(0,0,9)   ; //请
@@ -437,7 +569,7 @@ void delete_figure(void)
     OLED_ShowCN(0,6,48);  //确
     OLED_ShowCN(16,6,49); //定 
 }
-//删除成功
+//删除成功提示界面
 void delete_success(void)
 {
     OLED_ShowCN(16,2,32) ; //删
@@ -445,7 +577,7 @@ void delete_success(void)
     OLED_ShowCN(32+16,2,16); //成
     OLED_ShowCN(48+16,2,17); //功
 }
-////删除失败，ID未录入指纹
+//删除失败界面，ID未录入指纹
 void delete_fail(void)
 {
     OLED_ShowCN(16,2,32) ; //删
@@ -461,7 +593,7 @@ void delete_fail(void)
     OLED_ShowCN(96,4,36) ; //纹
 }
 
-//指纹个数为0
+//删除指纹失败界面，指纹个数为0
 void figuer_empty(void)
 {
     OLED_ShowCN(16,2,32) ; //删
@@ -476,8 +608,13 @@ void figuer_empty(void)
     OLED_ShowCN(80,4,36) ; //纹
 }
 
+
+
 __IO uint32_t uwTick_view;
 __IO uint32_t uwTick_key;
+
+
+//界面显示
 void view_display(void)
 {
     if((uwTick-uwTick_view)<100)return;
@@ -537,12 +674,24 @@ void view_display(void)
         case 16://指纹ID删除失败,ID未添加指纹
             delete_fail();
             break;
+        case 17://禁止输入解锁密码界面
+            forbid_user();
+            break;
+        case 18://输入管理员密码界面
+            admin_input();
+            break;
+        case 19://管理员登录失败
+            admin_fail();
+            break;
+        case 20://禁止输入管理员密码界面
+            forbid_admin();
+            break;
     }
 }
 
-
 unsigned char keep_menu=0;
 
+//按键控制模块
 void key_display(void)
 {
     if((uwTick-uwTick_key)<20)return;
@@ -550,7 +699,7 @@ void key_display(void)
     
     keynum=button4_4_Scan();
     
-    if(keynum==0&&view!=0)
+    if(keynum==0&&key_admin_flag==0&&key_user_flag==0&&view!=0)
     {
         keep_menu=1; 
     }
@@ -558,38 +707,64 @@ void key_display(void)
     {
         keep_menu=0;
     }
+
+    if(key_user_flag==1)//禁止输入
+    {
+        return;
+    }
+    
     if(long_view==1)
     {
         OLED_CLS();
+        SYN_FrameInfo(0,"[v7][m1][t5]已上锁");
         view=0;
+        k=0;k_admin=0;
         long_view=0;
         line_flag=0;
+        key_user_count=0;
+        key_user_flag=0;
+        figuer_count=0;
+        figure_flag=0;
         user_index=0;admin_index=0;
-        //memset(input_user_password,0,sizeof(input_user_password));
+        memset(input_user_password,0,sizeof(input_user_password));
+        memset(input_admin_password,0,sizeof(input_admin_password));
         memset(user_data,0,sizeof(user_data));
         memset(admin_data,0,sizeof(admin_data));
-        //return;
+        HAL_Delay(1000);
     }
     
     if(keynum!=0&&(view==8||view==11||view==13))//添加指纹成功、删除指纹、修改密码成功，按任意键返回到锁屏界面
     {
         line_flag=0;
         OLED_CLS();
+        SYN_FrameInfo(0,"[v7][m1][t5]已上锁");
         view=0;
-        user_index=0;admin_index=0;
-        //memset(input_user_password,0,sizeof(input_user_password));
+        key_user_count=0;
+        key_user_flag=0;
+        figuer_count=0;
+        figure_flag=0;
+        user_index=0;admin_index=0;k=0;k_admin=0;
+        memset(input_user_password,0,sizeof(input_user_password));
+        memset(input_admin_password,0,sizeof(input_admin_password));
         memset(user_data,0,sizeof(user_data));
         memset(admin_data,0,sizeof(admin_data));
+        HAL_Delay(1000);
     }
     else if(keynum!=0&&(view==14||view==15||view==16))//指纹已满界面、指纹为空界面、指纹ID删除失败，按任意键返回系统设置界面
     {
         line_flag=0;
         OLED_CLS();
         view=3;
-        user_index=0;admin_index=0;
-        //memset(input_user_password,0,sizeof(input_user_password));
+        key_user_count=0;
+        key_user_flag=0;
+        figuer_count=0;
+        figure_flag=0;k_admin=0;
+        user_index=0;admin_index=0;k=0;
+        memset(input_user_password,0,sizeof(input_user_password));
+        memset(input_admin_password,0,sizeof(input_admin_password));
         memset(user_data,0,sizeof(user_data));
         memset(admin_data,0,sizeof(admin_data));
+        
     }
     else
     switch(keynum){
@@ -601,11 +776,19 @@ void key_display(void)
             }
             break;
         case 2://7
-            if(view==0||view==2){
+            if(view==0||view==2){//用户登录界面
               if(k!=6)
                 {
                     OLED_ShowNum(16+16*k,4,7,2,16);
                     input_user_password[k++]=7;
+                }
+            }
+            else if(view==18||view==19)//管理员用户登录界面7
+            {
+                if(k_admin!=6)
+                {
+                    OLED_ShowNum(16+16*k_admin,4,7,2,16);
+                    input_admin_password[k_admin++]=7;
                 }
             }
             else if(view == 4||view==9)//修改解锁密码
@@ -626,14 +809,22 @@ void key_display(void)
             }
             break;
         case 3://4
-            if(view==0||view==2){
+            if(view==0||view==2){//用户登录界面
                 if(k!=6)
                     {
                         OLED_ShowNum(16+16*k,4,4,2,16);
                         input_user_password[k++]=4;
                     }
                 }
-            else if(view==7)
+            else if(view==18||view==19)//管理员登录界面4
+            {
+                if(k_admin!=6)
+                {
+                    OLED_ShowNum(16+16*k_admin,4,4,2,16);
+                    input_admin_password[k_admin++]=4;
+                }
+            }
+            else if(view==7)//输入删除指纹ID界面
             {
                 ID_NUM_delete=4;
                 OLED_ShowNum(48,4,4,2,16);
@@ -657,11 +848,19 @@ void key_display(void)
             
             break;
         case 4://1
-            if(view==0||view==2){
+            if(view==0||view==2){//登录界面
               if(k!=6)
                 {
                     OLED_ShowNum(16+16*k,4,1,2,16);
                     input_user_password[k++]=1;
+                }
+            }
+            else if(view==18||view==19)//管理员登录界面1
+            {
+                if(k_admin!=6)
+                {
+                    OLED_ShowNum(16+16*k_admin,4,1,2,16);
+                    input_admin_password[k_admin++]=1;
                 }
             }
             else if(view == 4||view==9)//修改解锁密码
@@ -682,13 +881,21 @@ void key_display(void)
             }
             break;
         case 5://0
-            if(view==0||view==2){
+            if(view==0||view==2){//登录界面
                 if(k!=6)
                     {
                         OLED_ShowNum(16+16*k,4,0,2,16);
                         input_user_password[k++]=0;
                     }
                 }
+            else if(view==18||view==19)//管理员登录界面0
+            {
+                if(k_admin!=6)
+                {
+                    OLED_ShowNum(16+16*k_admin,4,0,2,16);
+                    input_admin_password[k_admin++]=0;
+                }
+            }
             else if(view == 4||view==9)//修改解锁密码
             {
                 if(user_index<6)
@@ -707,12 +914,20 @@ void key_display(void)
             }
             break;
         case 6://8
-            if(view==0||view==2){
+            if(view==0||view==2){//登录界面
                 if(k!=6)
                     {
                         OLED_ShowNum(16+16*k,4,8,2,16);
                         input_user_password[k++]=8;
                     }
+            }
+            else if(view==18||view==19)//管理员登录界面8
+            {
+                if(k_admin!=6)
+                {
+                    OLED_ShowNum(16+16*k_admin,4,8,2,16);
+                    input_admin_password[k_admin++]=8;
+                }
             }
             else if(view == 4||view==9)//修改解锁密码
             {
@@ -732,12 +947,20 @@ void key_display(void)
             }
             break;
         case 7://5
-            if(view==0||view==2){
+            if(view==0||view==2){//登录界面
                 if(k!=6)
                     {
                         OLED_ShowNum(16+16*k,4,5,2,16);
                         input_user_password[k++]=5;
                     }
+            }
+            else if(view==18||view==19)//管理员登录界面5
+            {
+                if(k_admin!=6)
+                {
+                    OLED_ShowNum(16+16*k_admin,4,5,2,16);
+                    input_admin_password[k_admin++]=5;
+                }
             }
             else if(view == 4||view==9)//修改解锁密码
             {
@@ -757,14 +980,22 @@ void key_display(void)
             }
             break;
         case 8://2
-            if(view==0||view==2){
+            if(view==0||view==2){//登录界面
                 if(k!=6)
                     {
                         OLED_ShowNum(16+16*k,4,2,2,16);
                         input_user_password[k++]=2;
                     }
                 }
-            else if(view==7)
+            else if(view==18||view==19)//管理员登录界面2
+            {
+                if(k_admin!=6)
+                {
+                    OLED_ShowNum(16+16*k_admin,4,2,2,16);
+                    input_admin_password[k_admin++]=2;
+                }
+            }
+            else if(view==7)//输入删除指纹ID界面
             {
                 ID_NUM_delete=2;
                 OLED_ShowNum(48,4,2,2,16);
@@ -787,7 +1018,6 @@ void key_display(void)
             }
             break;
         case 9://#  确认键
-            //OLED_ShowNum(16,2,keynum,2,16);
             switch(view)
             {
                 case 0://初始界面 登录按钮
@@ -800,12 +1030,19 @@ void key_display(void)
                         {
                             k=0;
                             OLED_CLS();
-                            //SYN_FrameInfo(0,"[v7][m1][t5]解锁失败");
-                            
-                            view=2;
-                            //HAL_Delay(1000);
-                            //HAL_Delay(1000);
-                            //Unlock_failed();
+                            SYN_FrameInfo(0,"[v7][m1][t5]解锁失败");       
+                            HAL_Delay(1000);
+                            key_user_count++;
+                            if(key_user_count==3)
+                            {
+                                OLED_CLS();
+                                view=17;
+                                key_user_flag=1;
+                            }
+                            else
+                            {
+                                view=2;
+                            }
                         }
                         memset(input_user_password,0,sizeof(input_user_password));
                     break;
@@ -813,7 +1050,7 @@ void key_display(void)
                     if(k==1&&input_user_password[0]==255)
                     {
                         OLED_CLS();
-                        view=3;
+                        view=18;
                     }
                      k=0;
                      memset(input_user_password,0,sizeof(input_user_password));
@@ -828,12 +1065,20 @@ void key_display(void)
                         {
                             k=0;
                             OLED_CLS();
-                            //SYN_FrameInfo(0,"[v7][m1][t5]解锁失败");
-                            
-                            view=2;
-                            //HAL_Delay(1000);
-                            //HAL_Delay(1000);
-                            //Unlock_failed();
+                            SYN_FrameInfo(0,"[v7][m1][t5]解锁失败");                         
+                            //view=2;
+                            HAL_Delay(1000);
+                             key_user_count++;
+                            if(key_user_count==3)
+                            {
+                                OLED_CLS();
+                                view=17;
+                                key_user_flag=1;
+                            }
+                            else
+                            {
+                                view=2;
+                            }
                         }
                         memset(input_user_password,0,sizeof(input_user_password));
                     break;
@@ -944,15 +1189,76 @@ void key_display(void)
                         change_admin_fail_success();
                         memset(admin_data,0,sizeof(admin_data));
                     break;
+                case 18://输入管理员密码界面
+                    if(k_admin==6)
+                        {
+                            admin_judge();
+                            k_admin=0;
+                        }
+                        else
+                        {
+                            k_admin=0;
+                            OLED_CLS();
+                            SYN_FrameInfo(0,"[v7][m1][t5]管理员密码错误");       
+                            HAL_Delay(1000);
+                            key_admin_count++;
+                            if(key_admin_count==3)
+                            {
+                                OLED_CLS();
+                                view=20;
+                                key_admin_flag=1;
+                            }
+                            else
+                            {
+                                view=19;
+                            }
+                        }
+                        memset(input_admin_password,0,sizeof(input_admin_password));
+                    break;
+                case 19://管理员密码错误，输入管理员密码界面
+                    if(k_admin==6)
+                        {
+                            admin_judge();
+                            k_admin=0;
+                        }
+                        else
+                        {
+                            //k_admin=0;
+                            OLED_CLS();
+                            SYN_FrameInfo(0,"[v7][m1][t5]管理员密码错误");       
+                            HAL_Delay(1000);
+                            key_admin_count++;
+                            k_admin=0;
+                            if(key_admin_count==3)
+                            {
+                                OLED_CLS();
+                                view=20;
+                                key_admin_flag=1;
+                            }
+                            else
+                            {
+                                view=19;
+                            }
+                        }
+                        memset(input_admin_password,0,sizeof(input_admin_password));
+                    break;
             }         
             break;
         case 10://9
-            if(view==0||view==2){
+            if(view==0||view==2){//用户登录界面
                 if(k!=6)
                     {
                         OLED_ShowNum(16+k*16,4,9,2,16);
                         input_user_password[k++]=9;
                     }
+            }
+            else if(view==18||view==19)//管理员登录界面9
+            {
+                if(k_admin!=6)
+                {
+                    OLED_ShowNum(16+16*k_admin,4,9,2,16);
+                    input_admin_password[k_admin++]=9;
+                }
             }
             else if(view == 4||view==9)//修改解锁密码
             {
@@ -973,12 +1279,20 @@ void key_display(void)
             
             break;
         case 11://6
-            if(view==0||view==2){
+            if(view==0||view==2){//用户登录界面
                 if(k!=6)
                     {
                         OLED_ShowNum(16+k*16,4,6,2,16);
                         input_user_password[k++]=6;
                     }
+            }
+            else if(view==18||view==19)//管理员用户登录界面6
+            {
+                if(k_admin!=6)
+                {
+                    OLED_ShowNum(16+16*k_admin,4,6,2,16);
+                    input_admin_password[k_admin++]=6;
+                }
             }
             else if(view == 4||view==9)//修改解锁密码
             {
@@ -998,14 +1312,22 @@ void key_display(void)
             }
             break;
         case 12://3
-            if(view==0||view==2){
+            if(view==0||view==2){//用户登录界面
                 if(k!=6)
                     {
                         OLED_ShowNum(16+k*16,4,3,2,16);
                         input_user_password[k++]=3;
                     }
             }
-            else if(view==7)
+            else if(view==18||view==19)//管理员登录界面3
+            {
+                if(k_admin!=6)
+                {
+                    OLED_ShowNum(16+16*k_admin,4,3,2,16);
+                    input_admin_password[k_admin++]=3;
+                }
+            }
+            else if(view==7)//输入删除指纹ID界面
             {
                 ID_NUM_delete=3;
                 OLED_ShowNum(48,4,3,2,16);
@@ -1028,7 +1350,7 @@ void key_display(void)
             }
             break;
         case 13://D 返回按键
-            if(view==4||view==5||view==6||view==7)
+            if(view==4||view==5||view==6||view==7)//返回到菜单界面
             {
                 OLED_CLS();
                 line_flag=0;
@@ -1036,30 +1358,33 @@ void key_display(void)
                 admin_index=0;
                 memset(user_data,0,sizeof(user_data));
                 memset(admin_data,0,sizeof(admin_data));
+                k=0;
+                memset(input_user_password,0,sizeof(input_user_password));
                 view=3;
             }
-            else if(view==3)
+            else if(view==3||view==18)//返回到解锁成功界面
             {
                 OLED_CLS();
                 line_flag=0;
                 view=1;
             }
-            else if(view==9||view==10)
+            else if(view==9||view==10)//返回到系统设置界面
             {
                 user_index=0;
                 admin_index=0;
                 memset(user_data,0,sizeof(user_data));
                 memset(admin_data,0,sizeof(admin_data));
+                k=0;
+                memset(input_user_password,0,sizeof(input_user_password));
                 OLED_CLS();
                 view=3;
             }
-            //OLED_ShowNum(80,2,keynum,2,16);
             break;
         case 14://C  清除按键
             if(view==4||view==5||view==9||view==10)
             {
-                user_index=0;admin_index=0;
-                //memset(input_user_password,0,sizeof(input_user_password));
+                user_index=0;admin_index=0;k=0;
+                memset(input_user_password,0,sizeof(input_user_password));
                 memset(user_data,0,sizeof(user_data));
                 memset(admin_data,0,sizeof(admin_data));
                 OLED_ClearGivenChar(4);
@@ -1070,17 +1395,20 @@ void key_display(void)
                 memset(input_user_password,0,sizeof(input_user_password));
                 OLED_ClearGivenChar(4);
             }
+            else if(view==18||view==19)//管理员输入界面清除
+            {
+                k_admin=0;
+                 memset(input_admin_password,0,sizeof(input_admin_password));
+                OLED_ClearGivenChar(4);
+            }
             else if(view == 7)
             {
                 ID_NUM_delete=0;
                 
                 OLED_ClearGivenChar(4);
             }
-            
-            //OLED_ShowNum(96,2,keynum,2,16);
-            break;
+               break;
         case 15://B
-            //OLED_ShowNum(0,4,keynum,2,16);
             if(view==3)//设置界面
             {
                 OLED_CLS();
@@ -1102,14 +1430,14 @@ void key_display(void)
                 if(line_flag==4)
                     line_flag=0;
             }
-            //OLED_ShowNum(16,4,keynum,2,16);
             break;
     }
     
     keynum=0;
 }
 
-//将蓝牙APP上发送的数据在（发送到）单片机，并在电脑串口助手上显示
+
+//接收蓝牙APP发送的数据，并进行相关处理
 void usart_disp(void)
 {
     
@@ -1119,8 +1447,6 @@ void usart_disp(void)
         if(ID_NUM_store>=3)//指纹已经满了
         {
             view=14;
-            //HAL_UART_Transmit(&huart2,"添加指纹失败，已录入3个指纹",200,50);
-            //HAL_UART_Transmit(&huart2,"2",15,50);
             HAL_UART_Transmit(&huart2,"addfull",15,50);
         }
         else
@@ -1130,8 +1456,6 @@ void usart_disp(void)
     }
     else if(uart2_rx_buf[0]=='D')//删除指纹
     {
-        //OLED_ShowStr(0,2,"DeleteFigure",2);//ID
-        //HAL_UART_Transmit(&huart2,"deletesuccess",15,50);
         OLED_CLS();
         if(ID_NUM_store==0)//录入指纹为空
         {
@@ -1148,15 +1472,15 @@ void usart_disp(void)
             else
             {
                 HAL_UART_Transmit(&huart2,"iderror",15,50);
-                //HAL_UART_Transmit(&huart2,"删除指纹失败,请重新输入编号",100,50);
             }
         }
     }
     else if(uart2_rx_buf[0]=='O')//开门
     {
-        //OLED_ShowStr(0,4,"Open",2);//ID
         OLED_CLS();
+        SYN_FrameInfo(0,"[v7][m1][t5]解锁成功");
         view=1;
+        HAL_Delay(1000);
     }
     else if(uart2_rx_buf[0]=='U')//修改解锁密码
     {
@@ -1187,16 +1511,11 @@ void usart_disp(void)
     }    
     uart2_rx_len=0;
     memset(uart2_rx_buf,0,sizeof(uart2_rx_buf));
-    //HAL_UART_Transmit(&huart2,"Success",15,50);
-    //HAL_UART_Transmit(&huart2,"1",15,50);
 }
 //将串口助手上发送的数据传给蓝牙APP
 void usart1_disp(void)
 {
     HAL_UART_Transmit(&huart2,uart1_rx_buf,15,50);
-
-    //printf("%s\r\n",uart1_rx_buf);
-
     uart1_rx_len=0;
     memset(uart1_rx_buf,0,sizeof(uart1_rx_buf));
 }
