@@ -697,15 +697,76 @@ void ShowErrMessage(uint8_t ensure)
 	printf("%s\r\n",EnsureMessage(ensure));
 }
  
-uint16_t ID_NUM_store=1;
+uint16_t ID_NUM_store=0;
  
+
+ 
+SysPara AS608Para;//指纹模块AS608参数
+//刷指纹
+void press_FR(void)
+{
+  SearchResult seach;
+  uint8_t ensure;
+  char str[256];
+  //while(1)
+  //{
+    ensure = PS_GetImage();
+    if(ensure == 0x00) //获取图像成功
+    {
+      printf("获取图像成功成功\r\n");
+      ensure = PS_GenChar(CharBuffer1);
+      if(ensure == 0x00) //生成特征成功
+      {
+        ensure = PS_HighSpeedSearch(CharBuffer1, 0, 99, &seach);
+        if(ensure == 0x00) //搜索成功
+        {
+           
+		   printf("指纹验证成功");
+           figuer_count=0;
+           sprintf(str, " ID:%d 得分:%d  view:%d", seach.pageID, seach.mathscore,view);
+		   printf("%s\r\n",str);
+           OLED_CLS();
+           view=1;
+           HAL_Delay(1000);
+            return;
+           // break;
+        }
+        else
+        {
+		  printf("验证失败\r\n");
+          OLED_CLS();
+          view=2;
+          figuer_count++;
+          if(figuer_count>3)
+          {
+              figure_flag=1;
+          }
+          HAL_Delay(1000);
+            return;
+        }
+      }
+      else
+			{};
+			printf("请按手指\r\n");
+    }
+   //}
+}
+ 
+
 //录指纹
 void Add_FR(void)
 {
   uint8_t i, ensure, processnum = 0;
   uint8_t ID_NUM = 0;
   //ID_NUM_store=MyFLASH_ReadWord(STORE_START_ADDRESS + 13 * 2);
-  
+  if(ID_NUM_store>=3)
+  {
+
+    printf("录入指纹失败，只能录入3个指纹\r\n");
+    OLED_CLS();
+    view=14;
+    return;
+  }
    while(1)
    {
     if(button4_4_Scan()==13)
@@ -789,7 +850,7 @@ void Add_FR(void)
  
     case 4:
 		//printf("默认选择ID为1 \r\n");
-        printf("录入指纹个数为%d \r\n",ID_NUM_store+1);
+        //printf("录入指纹个数为%d \r\n",ID_NUM_store+1);
         //HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD,STORE_START_ADDRESS + 13 * 2,ID_NUM_store);
         
 //        printf("存入flash指纹ID为%d \r\n",MyFLASH_ReadHalfWord(STORE_START_ADDRESS + 13 * 2));
@@ -818,25 +879,30 @@ void Add_FR(void)
       key_num = 0;
 			#endif
       //ensure = PS_StoreChar(CharBuffer2, ID_NUM); //储存模板
-      if(ID_NUM_store<5){
-            ensure = PS_StoreChar(CharBuffer2, ID_NUM_store+2); //储存模板
+      uint16_t id_store=0;
+      for(int k=0;k<3;k++)
+       {
+            if(Store_Id[k]==0)
+            {
+               Store_Id[k]=1;
+                id_store=k+2;
+               break;
+            }
+        }
+     // if(ID_NUM_store<3){
+            ensure = PS_StoreChar(CharBuffer2, id_store); //储存模板
             ID_NUM_store++;
-      
+            printf("录入指纹个数为%d \r\n",ID_NUM_store);
           if(ensure == 0x00)
             {
             //if(ID_NUM_store<5){
                 printf("录入指纹成功\r\n");
-                for(int k=0;k<5;k++)
-                {
-                    if(Store_Id[k]==0)
-                    {
-                       Store_Id[k]=1;
-                       break;
-                    }
-                }
+                
                 Store_Save();
                 OLED_CLS();
                 view=11;
+                HAL_UART_Transmit(&huart2,"addsuccess",15,50);
+                //HAL_UART_Transmit(&huart2,"录入指纹成功",200,50);
                 return;
             }
           else
@@ -844,13 +910,14 @@ void Add_FR(void)
             processnum = 0;
             ShowErrMessage(ensure);
           }
-        }
-     else
-       {
-                printf("录入指纹失败，只能录入5个指纹\r\n");
-                OLED_CLS();
-                view=12;
-       }
+//       }
+//     else
+//       {
+//                printf("录入指纹失败，只能录入3个指纹\r\n");
+//                OLED_CLS();
+//                view=12;
+//                return;
+//       }
             delay_ms(1000);          
       
       break;
@@ -862,78 +929,59 @@ void Add_FR(void)
     }
   }
 }
- 
-SysPara AS608Para;//指纹模块AS608参数
-//刷指纹
-void press_FR(void)
-{
-  SearchResult seach;
-  uint8_t ensure;
-  char str[256];
-//  while(1)
-//  {
-    ensure = PS_GetImage();
-    if(ensure == 0x00) //获取图像成功
-    {
-      ensure = PS_GenChar(CharBuffer1);
-      if(ensure == 0x00) //生成特征成功
-      {
-        ensure = PS_HighSpeedSearch(CharBuffer1, 0, 99, &seach);
-        if(ensure == 0x00) //搜索成功
-        {
-           
-		   printf("指纹验证成功");
-           sprintf(str, " ID:%d 得分:%d  view:%d", seach.pageID, seach.mathscore,view);
-		   printf("%s\r\n",str);
-           OLED_CLS();
-           view=1;
-           HAL_Delay(1000);
-            return;
-           // break;
-        }
-        else
-        {
-		  printf("验证失败\r\n");
-            view=2;
-         HAL_Delay(1000);
-        }
-      }
-      else
-			{};
-			printf("请按手指\r\n");
-    }
- // }
-}
- 
+
+
 uint16_t ID_NUM_delete = 0;
 //删除单个指纹
-void Del_FR(void)
+void Del_FR(uint16_t ID_NUM_delete)
 {
   uint8_t  ensure;
   //uint16_t ID_NUM = 0;
   //printf("单个删除指纹开始，默认删除ID为1");
+    if(ID_NUM_store>0){
     printf("单个删除指纹开始，删除ID为：%d\r\n",ID_NUM_delete);
+    
   //ID_NUM = 1;
   //ensure = PS_DeletChar(ID_NUM, 1); //删除单个指纹
-    ensure = PS_DeletChar(ID_NUM_delete, 1); //删除单个指纹
-  if(ensure == 0)
-  {
-      if(ID_NUM_store>0){
-          printf("删除指纹成功 \r\n");
-          ID_NUM_store = ID_NUM_store -1;
-          Store_Id[ID_NUM_delete-1]=0;
-          Store_Save();
+      ensure = PS_DeletChar(ID_NUM_delete, 1); //删除单个指纹
+      if(ensure == 0)
+      {
+          if(Store_Id[ID_NUM_delete-2]==1){
+              Store_Id[ID_NUM_delete-2]=0;
+              printf("删除指纹成功 \r\n");
+              ID_NUM_store = ID_NUM_store -1;
+              printf("剩余指纹数为：%d\r\n",ID_NUM_store);
+              Store_Save();
+              view=13;
+              HAL_UART_Transmit(&huart2,"deletesuccess",15,50);
+              //HAL_UART_Transmit(&huart2,"删除指纹成功",200,50);
+          }
+          else
+          {
+              OLED_CLS();
+              printf("剩余指纹数为：%d\r\n",ID_NUM_store);
+              printf("删除指纹失败，该ID未录入指纹\r\n");
+              HAL_UART_Transmit(&huart2,"NoId",15,50);
+              //HAL_UART_Transmit(&huart2,"删除指纹失败，该ID未录入指纹",200,50);
+              view=16;
+          }
+          return;
       }
       else
-      {
-          printf("删除指纹失败，指纹数据为空\r\n");
+      { 
+          ShowErrMessage(ensure);
       }
   }
   else
-    ShowErrMessage(ensure);
+      {
+          printf("删除指纹失败，指纹数据为空\r\n");
+      }
   delay_ms(1500);
  
 }
+
+
+
 /*清空指纹库*/
 void Del_FR_Lib(void)
 {

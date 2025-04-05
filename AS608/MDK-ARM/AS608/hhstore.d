@@ -31,9 +31,12 @@ as608\hhstore.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 as608\hhstore.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 as608\hhstore.o: ..\Bsp\AS608.h
 as608\hhstore.o: ..\Bsp\menu.h
+as608\hhstore.o: ..\Bsp\timer.h
+as608\hhstore.o: ../Core/Inc/main.h
+as608\hhstore.o: ..\Bsp\menu.h
+as608\hhstore.o: ..\Bsp\syn6288.h
 as608\hhstore.o: ..\Bsp\oled.h
 as608\hhstore.o: ../Core/Inc/i2c.h
-as608\hhstore.o: ../Core/Inc/main.h
 as608\hhstore.o: ..\Bsp\hhStore.h
 as608\hhstore.o: ..\Bsp\key.h
 as608\hhstore.o: D:\keil_mdk\ARM\ARMCC\Bin\..\include\stdbool.h

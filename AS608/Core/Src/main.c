@@ -169,7 +169,7 @@ int main(void)
 //          {
 //              OLED_ShowNum(0+16*(i-13),4,value1,2,16);
 //          }
-//          else if(i>=14&&i<19)
+//          else if(i>=14&&i<17)
 //          {
 //              OLED_ShowNum(0+16*(i-14),6,value1,2,16);
 //          }

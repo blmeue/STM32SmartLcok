@@ -83,8 +83,10 @@ void Add_FR(void);
  
 void press_FR(void);
  
-void Del_FR(void);
+//void Del_FR(void);
  
+void Del_FR(uint16_t ID_NUM_delete);
+
 void Del_FR_Lib(void);
  
 #endif

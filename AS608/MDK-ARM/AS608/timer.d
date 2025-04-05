@@ -31,4 +31,7 @@ as608\timer.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
 as608\timer.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 as608\timer.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 as608\timer.o: ..\Bsp\menu.h
+as608\timer.o: ..\Bsp\timer.h
 as608\timer.o: ..\Bsp\syn6288.h
+as608\timer.o: ..\Bsp\oled.h
+as608\timer.o: ../Core/Inc/i2c.h

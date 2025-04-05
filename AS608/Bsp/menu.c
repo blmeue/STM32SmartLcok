@@ -19,14 +19,16 @@ unsigned char admin_flag=0;
 unsigned char unlock=0;
 
 unsigned char line_flag=0;
-
+unsigned char figure_flag=0;
 unsigned char view=0;
 
 uint16_t admin_data[6]={0};
 uint16_t user_data[6]={0};
 
-uint16_t admin_index=0;
-uint16_t user_index=0;
+uint16_t admin_index=0;//解锁密码下标
+uint16_t user_index=0;//管理员密码下标
+
+unsigned char figuer_count=0;
 
 void main_menu(void)
 {
@@ -64,6 +66,7 @@ uint8_t SYN_RecoverCom[] = {0XFD, 0X00, 0X02, 0X04, 0XFB}; //恢复合成
 uint8_t SYN_ChackCom[] = {0XFD, 0X00, 0X02, 0X21, 0XDE}; //状态查询
 uint8_t SYN_PowerDownCom[] = {0XFD, 0X00, 0X02, 0X88, 0X77}; //进入POWER DOWN 状态命令
 
+
 void denglu_jduge(void)
 {
     //判断输入密码是否正确
@@ -97,18 +100,18 @@ void denglu_jduge(void)
     //memset(input_user_password,0,sizeof(input_user_password));
 }
 
-
+//解锁成功界面
 void Unlock_success(void)
 {
-    //OLED_CLS();
-    //
      OLED_ShowCN(0,2,12)  ; //解
      OLED_ShowCN(16,2,6); //锁
      OLED_ShowCN(32,2,16); //成
      OLED_ShowCN(48,2,17); //功
-     OLED_ShowCN(90,4,23); //设
-     OLED_ShowCN(106,4,24); //置
-     view=1;
+     OLED_ShowCN(90,6,23); //设
+     OLED_ShowCN(106,6,24); //置
+     //view=1;
+    figure_flag=0;
+    figuer_count=0;
  //   memset(input_user_password,0,sizeof(input_user_password));
 //     unlock=1;
 }
@@ -116,7 +119,7 @@ void Unlock_success(void)
 void Unlock_failed(void)
 {
    // OLED_CLS();
-     view=2;
+     //view=2;
      OLED_ShowCN(0,2,12)  ; //解
      OLED_ShowCN(16,2,6)  ; //锁
      OLED_ShowCN(32,2,18) ; //失
@@ -125,8 +128,20 @@ void Unlock_failed(void)
      OLED_ShowCN(80,2,9)  ; //请
      OLED_ShowCN(96,2,20) ; //重
      OLED_ShowCN(112,2,21); //试 
-
-     Figure();//指纹解锁模块
+     if(figure_flag==0)
+     {
+         Figure();//指纹解锁模块
+         OLED_ClearGivenChar(0);
+     }
+     else
+     {
+         OLED_ShowCN(16,0,35) ; //指
+         OLED_ShowCN(32,0,36) ; //纹
+         OLED_ShowCN(48,0,50) ; //已
+         OLED_ShowCN(64,0,56) ; //禁
+         OLED_ShowCN(80,0,57) ; //用
+     }
+     
 }
 
 void admin_jduge(void)
@@ -311,7 +326,7 @@ void change_admin_fail_success(void)
     {
         //修改成功界面
        OLED_CLS();
-        view=8;
+       view=8;
        memcpy(Store_Admin,admin_data,sizeof(admin_data));
        Store_Save();
        user_flag=0;
@@ -364,6 +379,22 @@ void add_fail(void)
     OLED_ShowCN(48+16,2,19); //败
 }
 
+//指纹已经满了
+void figuer_fill(void)
+{
+    //已添加3个指纹，无法继续添加
+    OLED_ShowCN(16,2,50) ; //已
+    OLED_ShowCN(32,2,30) ; //添
+    OLED_ShowCN(48,2,31) ; //加
+    OLED_ShowNum(64,2,3,2,16);//3
+    OLED_ShowCN(80,2,51); //个
+    OLED_ShowCN(32,4,52); //无
+    OLED_ShowCN(48,4,52); //法
+    OLED_ShowCN(64,4,52); //再
+    OLED_ShowCN(80,4,30) ; //添
+    OLED_ShowCN(96,4,31) ; //加
+}
+
 void add_figure(void)
 {
     OLED_ShowCN(0,0,9) ; //请
@@ -390,18 +421,59 @@ void delete_figure(void)
     OLED_ShowCN(32,0,11) ; //入
     OLED_ShowCN(48,0,37) ; //需
     OLED_ShowCN(64,0,38) ; //要
-    OLED_ShowCN(16,2,32) ; //删
-    OLED_ShowCN(32,2,33) ; //除
-    OLED_ShowCN(48,2,41) ; //的
-    OLED_ShowCN(64,2,35) ; //指
-    OLED_ShowCN(80,2,36) ; //纹
-    OLED_ShowStr(96,2,"ID",2);//ID
+    OLED_ShowCN(80,0,32) ; //删
+    OLED_ShowCN(96,0,33) ; //除
+    OLED_ShowCN(112,0,41) ; //的
+    OLED_ShowCN(32-16,2,35) ; //指
+    OLED_ShowCN(48-16,2,36) ; //纹
+    OLED_ShowStr(64-16,2,"ID",2);//ID
+    OLED_ShowNum(80-16,2,2,2,16);
+    OLED_ShowChar(96-16,2,'-',16);
+    OLED_ShowNum(112-16-8,2,4,1,16);
     
     OLED_ShowCN(90,6,44); //返
     OLED_ShowCN(106,6,45); //回
     
     OLED_ShowCN(0,6,48);  //确
     OLED_ShowCN(16,6,49); //定 
+}
+//删除成功
+void delete_success(void)
+{
+    OLED_ShowCN(16,2,32) ; //删
+    OLED_ShowCN(32,2,33) ; //除
+    OLED_ShowCN(32+16,2,16); //成
+    OLED_ShowCN(48+16,2,17); //功
+}
+////删除失败，ID未录入指纹
+void delete_fail(void)
+{
+    OLED_ShowCN(16,2,32) ; //删
+    OLED_ShowCN(32,2,33) ; //除
+    OLED_ShowCN(32+16,2,18); //失
+    OLED_ShowCN(48+16,2,19); //败
+    
+    OLED_ShowStr(16,4,"ID",2);//ID
+    OLED_ShowCN(32,4,55) ; //未
+    OLED_ShowCN(48,4,30) ; //添
+    OLED_ShowCN(64,4,31) ; //加
+    OLED_ShowCN(80,4,35) ; //指
+    OLED_ShowCN(96,4,36) ; //纹
+}
+
+//指纹个数为0
+void figuer_empty(void)
+{
+    OLED_ShowCN(16,2,32) ; //删
+    OLED_ShowCN(32,2,33) ; //除
+    OLED_ShowCN(32+16,2,18); //失
+    OLED_ShowCN(48+16,2,19); //败
+    
+    OLED_ShowCN(16,4,55) ; //未
+    OLED_ShowCN(32,4,30) ; //添
+    OLED_ShowCN(48,4,31) ; //加
+    OLED_ShowCN(64,4,35) ; //指
+    OLED_ShowCN(80,4,36) ; //纹
 }
 
 __IO uint32_t uwTick_view;
@@ -410,7 +482,6 @@ void view_display(void)
 {
     if((uwTick-uwTick_view)<100)return;
     uwTick_view=uwTick;
-    
     switch(view)
     {
         case 0://锁屏界面
@@ -454,21 +525,71 @@ void view_display(void)
         case 12://添加指纹失败
             add_fail();
             break;
+        case 13://删除指纹成功
+            delete_success();
+            break;
+        case 14://指纹已经满了
+            figuer_fill();
+            break;
+        case 15://指纹为空
+            figuer_empty();
+            break;
+        case 16://指纹ID删除失败,ID未添加指纹
+            delete_fail();
+            break;
     }
 }
 
 
+unsigned char keep_menu=0;
 
 void key_display(void)
 {
-    if((uwTick-uwTick_key)<50)return;
+    if((uwTick-uwTick_key)<20)return;
     uwTick_key=uwTick;
+    
     keynum=button4_4_Scan();
-    if(keynum!=0&&view==8)
+    
+    if(keynum==0&&view!=0)
+    {
+        keep_menu=1; 
+    }
+    else if(keynum==0)
+    {
+        keep_menu=0;
+    }
+    if(long_view==1)
+    {
+        OLED_CLS();
+        view=0;
+        long_view=0;
+        line_flag=0;
+        user_index=0;admin_index=0;
+        //memset(input_user_password,0,sizeof(input_user_password));
+        memset(user_data,0,sizeof(user_data));
+        memset(admin_data,0,sizeof(admin_data));
+        //return;
+    }
+    
+    if(keynum!=0&&(view==8||view==11||view==13))//添加指纹成功、删除指纹、修改密码成功，按任意键返回到锁屏界面
     {
         line_flag=0;
         OLED_CLS();
         view=0;
+        user_index=0;admin_index=0;
+        //memset(input_user_password,0,sizeof(input_user_password));
+        memset(user_data,0,sizeof(user_data));
+        memset(admin_data,0,sizeof(admin_data));
+    }
+    else if(keynum!=0&&(view==14||view==15||view==16))//指纹已满界面、指纹为空界面、指纹ID删除失败，按任意键返回系统设置界面
+    {
+        line_flag=0;
+        OLED_CLS();
+        view=3;
+        user_index=0;admin_index=0;
+        //memset(input_user_password,0,sizeof(input_user_password));
+        memset(user_data,0,sizeof(user_data));
+        memset(admin_data,0,sizeof(admin_data));
     }
     else
     switch(keynum){
@@ -542,11 +663,6 @@ void key_display(void)
                     OLED_ShowNum(16+16*k,4,1,2,16);
                     input_user_password[k++]=1;
                 }
-            }
-            else if(view==7)
-            {
-                ID_NUM_delete=1;
-                OLED_ShowNum(48,4,1,2,16);
             }
             else if(view == 4||view==9)//修改解锁密码
             {
@@ -622,11 +738,6 @@ void key_display(void)
                         OLED_ShowNum(16+16*k,4,5,2,16);
                         input_user_password[k++]=5;
                     }
-            }
-            else if(view==7)
-            {
-                ID_NUM_delete=5;
-                OLED_ShowNum(48,4,5,2,16);
             }
             else if(view == 4||view==9)//修改解锁密码
             {
@@ -742,11 +853,21 @@ void key_display(void)
                         case 2:
                             //进入添加指纹界面
                             OLED_CLS();
+                            if(ID_NUM_store>=3)
+                            {
+                                view=14;
+                                break;
+                            }
                             view=6;
                             break;
                         case 3:
                             //进入删除指纹界面
                             OLED_CLS();
+                            if(ID_NUM_store==0)
+                            {
+                                view=15;
+                                break;
+                            }
                             view=7;
                             break;
                         }
@@ -782,6 +903,18 @@ void key_display(void)
                 case 6://添加指纹界面
                     break;
                 case 7://删除指纹界面
+                    if(ID_NUM_delete>=2&&ID_NUM_delete<=4)
+                    {
+                        OLED_CLS();
+                        //view=13;//删除指纹成功
+                        Del_FR(ID_NUM_delete);
+                        ID_NUM_delete=0; 
+                    }
+                    else
+                    {
+                        OLED_CLS();
+                        view=7;
+                    }
                     break;
                 case 9://修改用户密码界面,确认修改按键
                         if(user_index==6)
@@ -931,10 +1064,16 @@ void key_display(void)
                 memset(admin_data,0,sizeof(admin_data));
                 OLED_ClearGivenChar(4);
             }
-            if(view==0||view==2)
+           else if(view==0||view==2)
             {
                 k=0;
                 memset(input_user_password,0,sizeof(input_user_password));
+                OLED_ClearGivenChar(4);
+            }
+            else if(view == 7)
+            {
+                ID_NUM_delete=0;
+                
                 OLED_ClearGivenChar(4);
             }
             
@@ -973,23 +1112,45 @@ void key_display(void)
 //将蓝牙APP上发送的数据在（发送到）单片机，并在电脑串口助手上显示
 void usart_disp(void)
 {
-//    uint16_t admin_data[6]={0};
-//    uint16_t user_data[6]={0};
-    //发送到电脑串口助手
-    printf("%s\r\n",uart2_rx_buf);
-    //OLED_ShowStr(0,0,"blue",2);//ID
-    //OLED_ShowStr(0,4,uart2_rx_buf,sizeof(uart2_rx_buf));//ID
+    
     if(uart2_rx_buf[0]=='A')//添加指纹
     {
-        //OLED_ShowStr(0,0,"addFigure",2);//ID
         OLED_CLS();
-        view=6;
+        if(ID_NUM_store>=3)//指纹已经满了
+        {
+            view=14;
+            //HAL_UART_Transmit(&huart2,"添加指纹失败，已录入3个指纹",200,50);
+            //HAL_UART_Transmit(&huart2,"2",15,50);
+            HAL_UART_Transmit(&huart2,"addfull",15,50);
+        }
+        else
+        {
+            view=6;
+        }
     }
     else if(uart2_rx_buf[0]=='D')//删除指纹
     {
         //OLED_ShowStr(0,2,"DeleteFigure",2);//ID
+        //HAL_UART_Transmit(&huart2,"deletesuccess",15,50);
         OLED_CLS();
-        view=7;
+        if(ID_NUM_store==0)//录入指纹为空
+        {
+            //view=15;
+            HAL_UART_Transmit(&huart2,"empty",15,50);
+        }
+        else
+        {
+            //view=7;
+            if((uart2_rx_buf[1]-'0')<=4&&(uart2_rx_buf[1]-'0')>=2)
+            {
+                Del_FR(uart2_rx_buf[1]-'0');
+            }
+            else
+            {
+                HAL_UART_Transmit(&huart2,"iderror",15,50);
+                //HAL_UART_Transmit(&huart2,"删除指纹失败,请重新输入编号",100,50);
+            }
+        }
     }
     else if(uart2_rx_buf[0]=='O')//开门
     {
@@ -1013,12 +1174,9 @@ void usart_disp(void)
         Store_Data[4]=uart2_rx_buf[5]-'0';
         Store_Data[5]=uart2_rx_buf[6]-'0';
         Store_Save();
-
-
     }
     else if(uart2_rx_buf[0]=='R')//修改管理员密码
     {
-        
         Store_Admin[0]=uart2_rx_buf[1]-'0';
         Store_Admin[1]=uart2_rx_buf[2]-'0';
         Store_Admin[2]=uart2_rx_buf[3]-'0';
@@ -1029,6 +1187,8 @@ void usart_disp(void)
     }    
     uart2_rx_len=0;
     memset(uart2_rx_buf,0,sizeof(uart2_rx_buf));
+    //HAL_UART_Transmit(&huart2,"Success",15,50);
+    //HAL_UART_Transmit(&huart2,"1",15,50);
 }
 //将串口助手上发送的数据传给蓝牙APP
 void usart1_disp(void)

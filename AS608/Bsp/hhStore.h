@@ -10,6 +10,7 @@
 extern uint16_t Store_Data[];
 extern uint16_t Store_Admin[];
 extern uint16_t Store_Id[];
+
 void Store_Init(void);
 void Store_Save(void);
 void Store_Clear(void);

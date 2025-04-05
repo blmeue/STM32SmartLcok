@@ -35,6 +35,9 @@ as608\as608.o: ../Core/Inc/usart.h
 as608\as608.o: ../Core/Inc/main.h
 as608\as608.o: ..\Bsp\as608.h
 as608\as608.o: ..\Bsp\menu.h
+as608\as608.o: ..\Bsp\timer.h
+as608\as608.o: ..\Bsp\menu.h
+as608\as608.o: ..\Bsp\syn6288.h
 as608\as608.o: ..\Bsp\oled.h
 as608\as608.o: ../Core/Inc/i2c.h
 as608\as608.o: ..\Bsp\hhStore.h

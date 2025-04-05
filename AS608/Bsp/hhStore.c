@@ -3,7 +3,7 @@
 //存储的起始地址
 //#define STORE_START_ADDRESS		0x0800FC00
 //存储数据的个数
-#define STORE_COUNT				19
+#define STORE_COUNT				17
 uint32_t MyFLASH_ReadWord(uint32_t Address)
 {
 	return *((__IO uint32_t *)(Address));	//使用指针访问指定地址下的数据并返回
@@ -40,7 +40,7 @@ void hhMyFLASH_ErasePage(uint32_t ErasePageBaseAddr,uint32_t ErasePageNbPageCoun
 //定义SRAM数组
 uint16_t Store_Data[6]={1,2,3,4,5,6};	
 uint16_t Store_Admin[6]={8,8,8,8,8,8};
-uint16_t Store_Id[5]={0,0,0,0,0};
+uint16_t Store_Id[3]={0,0,0};
 
 //初始化假如没初始化过就初始化(第一个半字写特殊标志位0xA5A5，其余写入0)，假如初始化过就把闪存数据读取到数组Store_Data中
 void Store_Init(void)
@@ -143,7 +143,7 @@ void Store_Clear(void)
             ID_NUM_store=0;
            // HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD,STORE_START_ADDRESS + i * 2,1);
         }
-        else if(i>13&&i<19)
+        else if(i>13&&i<17)
         {
                 Store_Id[i-14]=0;
         }

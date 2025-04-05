@@ -32,6 +32,9 @@ as608\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 as608\stm32f1xx_it.o: ../Core/Inc/stm32f1xx_it.h
 as608\stm32f1xx_it.o: ../Bsp/AS608.h
 as608\stm32f1xx_it.o: ../Bsp/menu.h
+as608\stm32f1xx_it.o: ../Bsp/timer.h
+as608\stm32f1xx_it.o: ../Bsp/menu.h
+as608\stm32f1xx_it.o: ../Bsp/syn6288.h
 as608\stm32f1xx_it.o: ../Bsp/oled.h
 as608\stm32f1xx_it.o: ../Core/Inc/i2c.h
 as608\stm32f1xx_it.o: ../Bsp/hhStore.h
