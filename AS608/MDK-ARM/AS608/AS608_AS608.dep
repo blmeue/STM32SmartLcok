@@ -894,7 +894,7 @@ I (..\Bsp\oled_font.H)(0x67F0A7AB)
 I (..\Bsp\Delay.h)(0x67892631)
 F (..\Bsp\oled.h)(0x679F7B3F)()
 F (..\Bsp\oled_font.h)(0x67F0A7AB)()
-F (..\Bsp\menu.c)(0x68186906)(--c99 -c --cpu Cortex-M3 -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include -I ../Bsp-I.\RTE\_AS608-ID:\keil_mdk\ARM\PACK\ARM\CMSIS\5.8.0\CMSIS\Core\Include-ID:\keil_mdk\ARM\PACK\Keil\STM32F1xx_DFP\2.4.0\Device\Include-D__UVISION_VERSION="535" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o as608\menu.o --omf_browse as608\menu.crf --depend as608\menu.d)
+F (..\Bsp\menu.c)(0x68189E7F)(--c99 -c --cpu Cortex-M3 -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include -I ../Bsp-I.\RTE\_AS608-ID:\keil_mdk\ARM\PACK\ARM\CMSIS\5.8.0\CMSIS\Core\Include-ID:\keil_mdk\ARM\PACK\Keil\STM32F1xx_DFP\2.4.0\Device\Include-D__UVISION_VERSION="535" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o as608\menu.o --omf_browse as608\menu.crf --depend as608\menu.d)
 I (..\Bsp\menu.h)(0x6818549D)
 I (..\Bsp\timer.h)(0x67F0BB9C)
 I (../Core/Inc/main.h)(0x67892631)

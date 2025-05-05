@@ -1399,6 +1399,8 @@ void key_display(void)
                 memset(user_data,0,sizeof(user_data));
                 memset(admin_data,0,sizeof(admin_data));
                 k=0;
+                k_admin=0;
+                memset(input_admin_password,0,sizeof(input_admin_password));
                 memset(input_user_password,0,sizeof(input_user_password));
                 view=1;
             }
@@ -1419,6 +1421,8 @@ void key_display(void)
                 memset(user_data,0,sizeof(user_data));
                 memset(admin_data,0,sizeof(admin_data));
                 k=0;
+                k_admin=0;
+                memset(input_admin_password,0,sizeof(input_admin_password));
                 memset(input_user_password,0,sizeof(input_user_password));
                 view=3;
             }
@@ -1432,7 +1436,7 @@ void key_display(void)
                 memset(admin_data,0,sizeof(admin_data));
                 OLED_ClearGivenChar(4);
             }
-           else if(view==0||view==2)
+           else if(view==0||view==2)//用户密码输入界面清除
             {
                 k=0;
                 memset(input_user_password,0,sizeof(input_user_password));
@@ -1441,7 +1445,7 @@ void key_display(void)
             else if(view==18||view==19)//管理员输入界面清除
             {
                 k_admin=0;
-                 memset(input_admin_password,0,sizeof(input_admin_password));
+                memset(input_admin_password,0,sizeof(input_admin_password));
                 OLED_ClearGivenChar(4);
             }
             else if(view == 7)
