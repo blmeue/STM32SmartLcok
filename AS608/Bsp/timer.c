@@ -43,9 +43,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 key_user_sec=0;
                 sec1=0;
                 key_user_flag=0;
-                OLED_CLS();
-                OLED_CLS();
-                view=0;
+                key_user_count=0;
+                key_user_flag0=1;
+//                OLED_CLS();
+//                OLED_CLS();
+//                view=0;
             }
         }
         
@@ -62,16 +64,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 sec2=0;
                 OLED_CLS();
                 key_admin_flag=0;
-                OLED_CLS();
-                
-                view=18;
+                key_admin_count=0;
+                key_admin_flag0=1;
+//                OLED_CLS();
+//                view=18;
             }
         }
         
         if(keep_menu==1)
         {
             keep_sec++;
-            if(keep_sec==600)//1分钟无操作，自动上锁,因为按键扫描那里用掉了一部分时间，所以这里不需要计时1000
+            if(keep_sec==800)//1分钟无操作，自动上锁,因为按键扫描那里用掉了一部分时间，所以这里不需要计时1000
             {
                 long_view=1;
                 keep_sec=0;

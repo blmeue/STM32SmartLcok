@@ -16,6 +16,9 @@ uint8_t USART3_RX_BUF[USART3_MAX_RECV_LEN]; 				//接收缓冲,最大USART3_MAX_RECV_L
 uint8_t Get_Device_Code[10] ={0x01,0x00,0x07,0x13,0x00,0x00,0x00,0x00,0x00,0x1b};//口令验证
  
 uint8_t USART3_RX_STA= 0;//串口是否接收到数据
+
+uint8_t AS608_RX_BUF[USART3_MAX_RECV_LEN];
+uint8_t AS608_RX_STA= 0;//串口是否接收到数据
  
 //初始化PA11为下拉输入		    
 //读摸出感应状态(触摸感应时输出高电平信号)
@@ -24,20 +27,20 @@ void PS_StaGPIO_Init(void)
   GPIO_InitTypeDef  GPIO_InitStruct;
   __HAL_RCC_GPIOA_CLK_ENABLE();
   
-  //初始化读状态引脚GPIOA11
+//初始化读状态引脚GPIOA11
 //  GPIO_InitStructure.Pin = GPIO_PIN_11;
 //  GPIO_InitStructure.Mode = GPIO_MODE_INPUT; 		 //IPD:下拉输入
 //  GPIO_InitStructure.Pull = GPIO_PULLDOWN;		 //
 // 
 //  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);//初始化GPIO	
-  GPIO_InitStruct.Pin = GPIO_PIN_11;
+  GPIO_InitStruct.Pin = GPIO_PIN_1;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
 GPIO_PinState IsModuleWakingUp1(void) {
-    return HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11); // 返回GPIO状态，例如HIGH或LOW
+    return HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1); // 返回GPIO状态，例如HIGH或LOW
 }
 
 //串口发送一个字节
@@ -50,7 +53,8 @@ static uint8_t MYUSART_SendData(uint8_t data)
 //发送包头
 static void SendHead(void)
 {
-	memset(USART3_RX_BUF,0,sizeof(USART3_RX_BUF));//发送前清空数据，因为所有都要发送包头，所以只需要在发送包头前清空即可
+  //memset(USART3_RX_BUF,0,sizeof(USART3_RX_BUF));//发送前清空数据，因为所有都要发送包头，所以只需要在发送包头前清空即可
+  memset(AS608_RX_BUF,0,sizeof(AS608_RX_BUF));//发送前清空数据，因为所有都要发送包头，所以只需要在发送包头前清空即可
   MYUSART_SendData(0xEF);
   MYUSART_SendData(0x01);
 }
@@ -93,7 +97,8 @@ static void SendCheck(uint16_t check)
 *****************************************/
 static uint8_t AS608_Check(void)
 {
-	USART3_RX_BUF[9] = 1;
+//	USART3_RX_BUF[9] = 1;
+    AS608_RX_BUF[9] = 1;
 	
   SendHead();
   SendAddr();
@@ -103,7 +108,7 @@ static uint8_t AS608_Check(void)
 	}
 	//HAL_UART_Receive(&AS608_UART,USART3_RX_BUF,12,100);//串口三接收12个数据
 	delay_ms(200);//等待200ms
-	if(USART3_RX_BUF[9] == 0)
+	if(AS608_RX_BUF[9] == 0)
 		return 0;
  
   return 1;
@@ -112,7 +117,7 @@ static uint8_t AS608_Check(void)
 uint8_t as608_init(void)
 {
 	//设置uart3接收中断
-	HAL_UART_Receive_IT(&AS608_UART,USART3_RX_BUF,sizeof( USART3_RX_BUF));//接收数据，且产生中断
+	HAL_UART_Receive_IT(&AS608_UART,AS608_RX_BUF,sizeof( AS608_RX_BUF));//接收数据，且产生中断
 	//使能空闲中断
 	__HAL_UART_ENABLE_IT(&AS608_UART,UART_IT_IDLE);//
 	
@@ -133,14 +138,14 @@ static uint8_t *JudgeStr(uint16_t waittime)
   str[5] = AS608Addr;
   str[6] = 0x07;
   str[7] = '\0';
-  USART3_RX_STA = 0;
+  AS608_RX_STA = 0;
   while(--waittime)
   {
     delay_ms(1);
-    if(USART3_RX_STA) //接收到一次数据
+    if(AS608_RX_STA) //接收到一次数据
     {
-      USART3_RX_STA = 0;
-      data = strstr((const char*)USART3_RX_BUF, (const char*)str);
+      AS608_RX_STA = 0;
+      data = strstr((const char*)AS608_RX_BUF, (const char*)str);
       if(data)
         return (uint8_t*)data;
     }
@@ -593,20 +598,20 @@ uint8_t PS_HandShake(uint32_t *PS_Addr)
   MYUSART_SendData(0X00);
   MYUSART_SendData(0X00);
   delay_ms(200);
-  if(USART3_RX_STA & 0X8000) //接收到数据
+  if(AS608_RX_STA & 0X8000) //接收到数据
   {
     if(//判断是不是模块返回的应答包
-      USART3_RX_BUF[0] == 0XEF
-      && USART3_RX_BUF[1] == 0X01
-      && USART3_RX_BUF[6] == 0X07
+      AS608_RX_BUF[0] == 0XEF
+      && AS608_RX_BUF[1] == 0X01
+      && AS608_RX_BUF[6] == 0X07
     )
     {
-      *PS_Addr = (USART3_RX_BUF[2] << 24) + (USART3_RX_BUF[3] << 16)
-                 + (USART3_RX_BUF[4] << 8) + (USART3_RX_BUF[5]);
-      USART3_RX_STA = 0;
+      *PS_Addr = (AS608_RX_BUF[2] << 24) + (AS608_RX_BUF[3] << 16)
+                 + (AS608_RX_BUF[4] << 8) + (AS608_RX_BUF[5]);
+      AS608_RX_STA = 0;
       return 0;
     }
-    USART3_RX_STA = 0;
+    AS608_RX_STA = 0;
   }
   return 1;
 }
@@ -748,11 +753,15 @@ void press_FR(void)
               figure_flag=1;
               SYN_FrameInfo(2,"[v7][m1][t5]指纹验证失败 禁用指纹"); 
               figuer_count=0;
+              k=0;
+              memset(input_user_password,0,sizeof(input_user_password));
               //HAL_Delay(1000);
           }
           else
           {
               SYN_FrameInfo(2,"[v7][m1][t5]指纹验证失败");
+              k=0;
+              memset(input_user_password,0,sizeof(input_user_password));
           }
           HAL_Delay(1000);
             return;
@@ -782,6 +791,7 @@ void Add_FR(void)
   }
    while(1)
    {
+     usart1_disp();
     if(button4_4_Scan()==13)
     {
         OLED_CLS();
@@ -792,7 +802,7 @@ void Add_FR(void)
     {
      case 0:
       i++;
-			printf("请按手指\r\n");
+	  printf("请按手指%d\r\n",i);
       ensure = PS_GetImage();
       if(ensure == 0x00)
       {
@@ -807,10 +817,10 @@ void Add_FR(void)
       }
       else ShowErrMessage(ensure);
       break;
- 
+      
      case 1:
       i++;
-		  printf("请再按一次\r\n");
+	  printf("请再按一次\r\n");
       ensure = PS_GetImage();
       if(ensure == 0x00)
       {
@@ -912,9 +922,19 @@ void Add_FR(void)
                 printf("录入指纹成功\r\n");
                 
                 Store_Save();
-                OLED_CLS();
-                view=11;
-                HAL_UART_Transmit(&huart2,"addsuccess",15,50);
+                
+                if(add_flag==0)
+                {
+                    OLED_CLS();
+                    view=11;
+                }
+                else
+                {
+                    add_flag=0;
+                    OLED_CLS();
+                    view=0;
+                }
+                HAL_UART_Transmit(&huart1,"Addsuccess",10,50);
                 //HAL_UART_Transmit(&huart2,"录入指纹成功",200,50);
                 return;
             }
@@ -932,13 +952,15 @@ void Add_FR(void)
 //                return;
 //       }
             delay_ms(1000);          
-      
       break;
     }
     delay_ms(400);
-    if(i == 10) //超过5次没有按手指则退出
+    if(i == 15) //超过15次没有按手指则退出
     {
+      OLED_CLS();
+      view=1;
       break;
+        
     }
   }
 }
@@ -965,18 +987,34 @@ void Del_FR(uint16_t ID_NUM_delete)
               ID_NUM_store = ID_NUM_store -1;
               printf("剩余指纹数为：%d\r\n",ID_NUM_store);
               Store_Save();
-              view=13;
-              HAL_UART_Transmit(&huart2,"deletesuccess",15,50);
+             if(add_flag==0)
+             {
+                view=13;
+             }
+             else 
+             {
+                 add_flag=0;
+             }
+              
+              HAL_UART_Transmit(&huart1,"Deletesuccess",15,50);
               //HAL_UART_Transmit(&huart2,"删除指纹成功",200,50);
           }
           else
           {
-              OLED_CLS();
-              printf("剩余指纹数为：%d\r\n",ID_NUM_store);
-              printf("删除指纹失败，该ID未录入指纹\r\n");
-              HAL_UART_Transmit(&huart2,"NoId",15,50);
-              //HAL_UART_Transmit(&huart2,"删除指纹失败，该ID未录入指纹",200,50);
-              view=16;
+              if(add_flag==0)
+              {
+                  OLED_CLS();
+                  //printf("剩余指纹数为：%d\r\n",ID_NUM_store);
+                  //printf("删除指纹失败，该ID未录入指纹\r\n");
+//                  HAL_UART_Transmit(&huart1,"NoId",4,50);
+                  //HAL_UART_Transmit(&huart2,"删除指纹失败，该ID未录入指纹",200,50);
+                  view=16;
+              }
+              else
+              {
+                  add_flag=0;
+              }
+               HAL_UART_Transmit(&huart1,"NoId",4,50);
           }
           return;
       }

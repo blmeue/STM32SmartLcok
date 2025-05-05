@@ -7,6 +7,7 @@
 #include "hhStore.h"
 #include "key.h"
 #include "SYN6288.h"
+#include "myusart.h"
  
 #define CharBuffer1 0x01
 #define CharBuffer2 0x02
@@ -14,13 +15,19 @@
  
 #define USART3_MAX_RECV_LEN		400					//最大接收缓存字节数
  
-#define AS608_UART	huart3//AS608模块所使用的串口
+#define AS608_UART	huart2//AS608模块所使用的串口
  
-extern uint8_t USART3_RX_BUF[USART3_MAX_RECV_LEN];
- 
-extern uint8_t USART3_RX_STA;
- 
+//extern uint8_t USART3_RX_BUF[USART3_MAX_RECV_LEN];
+//extern uint8_t USART3_RX_STA;
+//extern uint32_t AS608Addr;//模块地址
+
+
+extern uint8_t AS608_RX_BUF[USART3_MAX_RECV_LEN]; 
+
+extern uint8_t AS608_RX_STA;
+
 extern uint32_t AS608Addr;//模块地址
+
 
 extern uint16_t ID_NUM_store;
 
@@ -32,6 +39,7 @@ typedef struct
 	uint16_t mathscore;//匹配得分
 }SearchResult;
  
+
 typedef struct
 {
 	uint16_t PS_max;//指纹最大容量

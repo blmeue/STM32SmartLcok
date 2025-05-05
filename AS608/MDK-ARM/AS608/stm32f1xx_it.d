@@ -41,3 +41,5 @@ as608\stm32f1xx_it.o: ../Bsp/hhStore.h
 as608\stm32f1xx_it.o: ../Bsp/AS608.h
 as608\stm32f1xx_it.o: ../Bsp/key.h
 as608\stm32f1xx_it.o: D:\keil_mdk\ARM\ARMCC\Bin\..\include\stdbool.h
+as608\stm32f1xx_it.o: ../Bsp/myusart.h
+as608\stm32f1xx_it.o: ../Core/Inc/usart.h

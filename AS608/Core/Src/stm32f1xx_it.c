@@ -236,7 +236,23 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-
+   
+    if(__HAL_UART_GET_FLAG(&AS608_UART,UART_FLAG_IDLE) != RESET)
+    {
+        //ÈÏÎªÊý¾Ý½ÓÊÕÍê³É£¬½øÐÐ´¦Àí
+        //1¡¢Çå³ý¿ÕÏÐÖÐ¶Ï
+        __HAL_UART_CLEAR_IDLEFLAG(&AS608_UART);
+         
+        //2¡¢»ñÈ¡½ÓÊÕ´óÐ¡
+         
+        //3¡¢Çå¿Õ½ÓÊÕ×´Ì¬
+         
+        AS608_UART.RxXferCount = sizeof(AS608_RX_BUF);
+        AS608_UART.pRxBuffPtr = AS608_RX_BUF;
+        AS608_RX_STA = 1;//½ÓÊÕÊý¾ÝÍê³É
+        return ;	
+    }
+    
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
@@ -251,21 +267,6 @@ void USART3_IRQHandler(void)
 {
   /* USER CODE BEGIN USART3_IRQn 0 */
 	
-	if(__HAL_UART_GET_FLAG(&AS608_UART,UART_FLAG_IDLE) != RESET)
-	{
-	//ï¿½ï¿½Îªï¿½ï¿½ï¿½Ý½ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ï¿½ï¿?
-	//1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿?
-	__HAL_UART_CLEAR_IDLEFLAG(&AS608_UART);
-
-	//2ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½Õ´ï¿½Ð¡
-
-	//3ï¿½ï¿½ï¿½ï¿½Õ½ï¿½ï¿½ï¿½×´Ì?
-
-	AS608_UART.RxXferCount = sizeof(USART3_RX_BUF);
-	AS608_UART.pRxBuffPtr = USART3_RX_BUF;
-	USART3_RX_STA = 1;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿?
-	return ;	
-	}
 
   /* USER CODE END USART3_IRQn 0 */
   HAL_UART_IRQHandler(&huart3);

@@ -40,7 +40,7 @@ as608\menu.o: ..\Bsp\hhStore.h
 as608\menu.o: ..\Bsp\AS608.h
 as608\menu.o: ..\Bsp\key.h
 as608\menu.o: D:\keil_mdk\ARM\ARMCC\Bin\..\include\stdbool.h
-as608\menu.o: D:\keil_mdk\ARM\ARMCC\Bin\..\include\stdio.h
-as608\menu.o: D:\keil_mdk\ARM\ARMCC\Bin\..\include\string.h
 as608\menu.o: ..\Bsp\myusart.h
 as608\menu.o: ../Core/Inc/usart.h
+as608\menu.o: D:\keil_mdk\ARM\ARMCC\Bin\..\include\stdio.h
+as608\menu.o: D:\keil_mdk\ARM\ARMCC\Bin\..\include\string.h

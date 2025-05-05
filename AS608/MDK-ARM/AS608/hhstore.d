@@ -40,3 +40,5 @@ as608\hhstore.o: ../Core/Inc/i2c.h
 as608\hhstore.o: ..\Bsp\hhStore.h
 as608\hhstore.o: ..\Bsp\key.h
 as608\hhstore.o: D:\keil_mdk\ARM\ARMCC\Bin\..\include\stdbool.h
+as608\hhstore.o: ..\Bsp\myusart.h
+as608\hhstore.o: ../Core/Inc/usart.h

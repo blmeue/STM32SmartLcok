@@ -44,3 +44,4 @@ as608\as608.o: ..\Bsp\hhStore.h
 as608\as608.o: ..\Bsp\AS608.h
 as608\as608.o: ..\Bsp\key.h
 as608\as608.o: D:\keil_mdk\ARM\ARMCC\Bin\..\include\stdbool.h
+as608\as608.o: ..\Bsp\myusart.h
