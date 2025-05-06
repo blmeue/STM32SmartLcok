@@ -15,13 +15,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if(htim->Instance == TIM3)
     {
-//        sec++;
-//        if(sec>=10)
-//        {
-//            sec=0;
-//            //SYN_FrameInfo(2,"[v7][m1][t5]解锁失败");  
-//        }
-        if(figure_flag==1)
+        if(figure_flag==1)//指纹解锁失败3次标志
         {
             figuer_keep++;
             if(figuer_keep==300)//30秒内不能使用指纹解锁
@@ -38,7 +32,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             {
                 sec1++;
             }
-            if(key_user_sec==300)//30秒内不能解锁
+            if(key_user_sec>=300-1)//30秒内不能解锁
             {
                 key_user_sec=0;
                 sec1=0;
@@ -58,11 +52,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             {
                 sec2++;
             }
-            if(key_admin_sec==300)//30秒内不能输入
+            if(key_admin_sec>=300-1)//30秒内不能输入
             {
                 key_admin_sec=0;
                 sec2=0;
-                OLED_CLS();
                 key_admin_flag=0;
                 key_admin_count=0;
                 key_admin_flag0=1;
@@ -74,7 +67,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         if(keep_menu==1)
         {
             keep_sec++;
-            if(keep_sec==800)//1分钟无操作，自动上锁,因为按键扫描那里用掉了一部分时间，所以这里不需要计时1000
+            if(keep_sec==700)//1分钟无操作，自动上锁,因为按键扫描那里用掉了一部分时间，所以这里不需要计时1000
             {
                 long_view=1;
                 keep_sec=0;
@@ -83,6 +76,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         else
         {
             keep_sec=0;
+            long_view=0;
         }
         
     }

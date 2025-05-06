@@ -20,7 +20,7 @@ uint8_t USART3_RX_STA= 0;//串口是否接收到数据
 uint8_t AS608_RX_BUF[USART3_MAX_RECV_LEN];
 uint8_t AS608_RX_STA= 0;//串口是否接收到数据
  
-//初始化PA11为下拉输入		    
+//初始化PA0为下拉输入		    
 //读摸出感应状态(触摸感应时输出高电平信号)
 void PS_StaGPIO_Init(void)
 {   
@@ -33,14 +33,14 @@ void PS_StaGPIO_Init(void)
 //  GPIO_InitStructure.Pull = GPIO_PULLDOWN;		 //
 // 
 //  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);//初始化GPIO	
-  GPIO_InitStruct.Pin = GPIO_PIN_1;
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
 GPIO_PinState IsModuleWakingUp1(void) {
-    return HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1); // 返回GPIO状态，例如HIGH或LOW
+    return HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0); // 返回GPIO状态，例如HIGH或LOW
 }
 
 //串口发送一个字节
@@ -733,7 +733,7 @@ void press_FR(void)
             
             //HAL_Delay(1000);
            OLED_CLS();
-           SYN_FrameInfo(0,"[v7][m1][t5]解锁成功");
+           SYN_FrameInfo(0,"[v7][m1][t5]已开门，请上锁");
            view=1;
            //HAL_Delay(1000);
            HAL_Delay(1000);
@@ -785,8 +785,14 @@ void Add_FR(void)
   {
 
     printf("录入指纹失败，只能录入3个指纹\r\n");
-    OLED_CLS();
-    view=14;
+    if(add_flag==0){
+        OLED_CLS();
+        view=14;
+    }
+    else
+    {
+        add_flag=0;
+    }
     return;
   }
    while(1)
@@ -955,10 +961,17 @@ void Add_FR(void)
       break;
     }
     delay_ms(400);
-    if(i == 15) //超过15次没有按手指则退出
+    if(i == 25) //超过25次没有按手指则退出
     {
-      OLED_CLS();
-      view=1;
+      if(add_flag==0){
+          OLED_CLS();
+          view=1;
+      }
+      else
+      {
+          OLED_CLS();
+          view=0;
+      }
       break;
         
     }

@@ -21,6 +21,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         uart2_rx_buf[uart2_rx_len++] = receive_dat;
         HAL_UART_Receive_IT(&huart3,&receive_dat,1);
     }
+    //接收蓝牙发送的数据
     if(huart->Instance == USART1)
     {
         uart1_rx_buf[uart1_rx_len++] = receive_dat1;

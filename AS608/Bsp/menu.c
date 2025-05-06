@@ -72,6 +72,11 @@ void main_menu(void)
     Figure();
 }
 
+//选择背景音乐2。(0：无背景音乐  1-15：背景音乐可选)
+//m[0~16]:0背景音乐为静音，16背景音乐音量最大
+//v[0~16]:0朗读音量为静音，16朗读音量最大
+//t[0~5]:0朗读语速最慢，5朗读语速最快
+//SYN_FrameInfo(2, "[v7][m1][t5]欢迎使用SYN6288");
 uint8_t SYN_StopCom[] = {0xFD, 0X00, 0X02, 0X02, 0XFD}; //停止合成
 uint8_t SYN_SuspendCom[] = {0XFD, 0X00, 0X02, 0X03, 0XFC}; //暂停合成
 uint8_t SYN_RecoverCom[] = {0XFD, 0X00, 0X02, 0X04, 0XFB}; //恢复合成
@@ -158,6 +163,12 @@ void Unlock_failed(void)
          OLED_ShowCN(80,0,57) ; //用
      }
      
+     OLED_ShowCN(0,6,46);  //清
+     OLED_ShowCN(16,6,47); //除
+     
+    OLED_ShowCN(96,6,48);  //确
+    OLED_ShowCN(112,6,49); //定
+     
 }
 
 //禁止输入用户密码界面
@@ -211,6 +222,7 @@ void admin_judge(void)
         view=3;
         SYN_FrameInfo(2,"[v7][m1][t5]进入管理员模式");
         //k_admin=0;
+        line_flag=0;
         HAL_Delay(1000);
         key_admin_count=0;
         key_user_flag=0;
@@ -252,6 +264,13 @@ void admin_fail(void)
      OLED_ShowCN(48,2,9)  ; //请
      OLED_ShowCN(64,2,20) ; //重
      OLED_ShowCN(80,2,21); //试 
+    
+    OLED_ShowCN(0,6,46);  //清
+    OLED_ShowCN(16,6,47); //除
+    
+    //返回，回到系统设置界面
+    OLED_ShowCN(90,6,44);  //返
+    OLED_ShowCN(106,6,45); //回
 }
 
 //禁用管理员登录
@@ -699,26 +718,25 @@ void key_display(void)
     uwTick_key=uwTick;
     
     keynum=button4_4_Scan();
-    if(key_admin_flag0==1)
+    if(key_admin_flag0==1)//禁用管理员密码输入
     {
         OLED_CLS();
         view=18;
         key_admin_flag0=0;
     }
-    
-    if(key_user_flag0==1)
+    if(key_user_flag0==1)//禁用用户密码输入
     {
         OLED_CLS();
         view=0;
         key_user_flag0=0;
     }
     
-    if(keynum==0&&key_admin_flag==0&&key_user_flag==0&&view!=0)
+    if(keynum==0)
     {
         //if(view!=20&&view!=17)
         keep_menu=1; 
     }
-    else if(keynum==0)
+    else
     {
         keep_menu=0;
     }
@@ -727,14 +745,13 @@ void key_display(void)
     {
         return;
     }
-    
-//    if(figure_flag==1)
-//    {
-//       k=0;
-//       memset(input_user_password,0,sizeof(input_user_password));
-//    }
-    
-    if(long_view==1)
+    if(long_view==1&&view==0)//解锁界面，一分钟无操作只需要清除第四行的内容即可
+    {
+       OLED_ClearGivenChar(4); 
+       k=0;
+       memset(input_user_password,0,sizeof(input_user_password));
+    }
+    else if(long_view==1&&view!=0)//一分钟无操作自动上锁
     {
         OLED_CLS();
         SYN_FrameInfo(0,"[v7][m1][t5]已上锁");
@@ -784,8 +801,7 @@ void key_display(void)
         memset(input_user_password,0,sizeof(input_user_password));
         memset(input_admin_password,0,sizeof(input_admin_password));
         memset(user_data,0,sizeof(user_data));
-        memset(admin_data,0,sizeof(admin_data));
-        
+        memset(admin_data,0,sizeof(admin_data)); 
     }
     else
     switch(keynum){
@@ -1390,7 +1406,7 @@ void key_display(void)
                 memset(input_user_password,0,sizeof(input_user_password));
                 view=3;
             }
-            else if(view==3||view==18)//返回到解锁成功界面
+            else if(view==3||view==18||view==19)//返回到解锁成功界面
             {
                 OLED_CLS();
                 line_flag=0;
@@ -1406,14 +1422,6 @@ void key_display(void)
             }
             else if(view==9||view==10)//返回到系统设置界面
             {
-//                user_index=0;
-//                admin_index=0;
-//                memset(user_data,0,sizeof(user_data));
-//                memset(admin_data,0,sizeof(admin_data));
-//                k=0;
-//                memset(input_user_password,0,sizeof(input_user_password));
-//                OLED_CLS();
-//                view=3;
                 OLED_CLS();
                 line_flag=0;
                 user_index=0;
@@ -1425,6 +1433,22 @@ void key_display(void)
                 memset(input_admin_password,0,sizeof(input_admin_password));
                 memset(input_user_password,0,sizeof(input_user_password));
                 view=3;
+            }
+            else if(view==1)//解锁成功，按D键上锁
+            {
+                OLED_CLS();
+                SYN_FrameInfo(0,"[v7][m1][t5]已上锁");
+                view=0; 
+                line_flag=0;
+                user_index=0;
+                admin_index=0;
+                memset(user_data,0,sizeof(user_data));
+                memset(admin_data,0,sizeof(admin_data));
+                k=0;
+                k_admin=0;
+                memset(input_admin_password,0,sizeof(input_admin_password));
+                memset(input_user_password,0,sizeof(input_user_password));
+                HAL_Delay(1000);
             }
             break;
         case 14://C  清除按键
@@ -1485,87 +1509,6 @@ void key_display(void)
 
 
 //接收蓝牙APP发送的数据，并进行相关处理
-//void usart_disp(void)
-//{ 
-//    if(uart2_rx_buf[0]=='A')//添加指纹
-//    {
-//        OLED_CLS();
-//        if(ID_NUM_store>=3)//指纹已经满了
-//        {
-//            view=14;
-//            HAL_UART_Transmit(&huart2,"Addfull",15,50);
-//        }
-//        else
-//        {
-//            view=6;
-//        }
-//    }
-//    else if(uart2_rx_buf[0]=='D')//删除指纹
-//    {
-//        OLED_CLS();
-//        if(ID_NUM_store==0)//录入指纹为空
-//        {
-//            //view=15;
-//            HAL_UART_Transmit(&huart2,"Empty",10,50);
-//        }
-//        else
-//        {
-//            //view=7;
-////            if((uart2_rx_buf[1])<='4'&&(uart2_rx_buf[1])>='2')
-////            {
-//                Del_FR(uart2_rx_buf[1]-'0');
-////            }
-////            else
-////            {
-////                HAL_UART_Transmit(&huart2,"iderror",15,50);
-////            }
-//        }
-//    }
-//    else if(uart2_rx_buf[0]=='O')//系统已上锁，点击开门
-//    {
-//        OLED_CLS();
-//        SYN_FrameInfo(0,"[v7][m1][t5]解锁成功");
-//        view=1;
-//        HAL_Delay(1000);
-//    }
-//    else if(uart2_rx_buf[0]=='C')//系统已开锁，点击关锁
-//    {
-//        OLED_CLS();
-//        SYN_FrameInfo(0,"[v7][m1][t5]已上锁");
-//        view=0;
-//        HAL_Delay(1000);
-//    }
-//    else if(uart2_rx_buf[0]=='U')//修改解锁密码
-//    {
-////        OLED_ShowStr(0,6,"User",2);//ID
-////        user_data[0]=uart2_rx_buf[1]-'0';
-////        user_data[1]=uart2_rx_buf[2]-'0';
-////        user_data[2]=uart2_rx_buf[3]-'0';
-////        user_data[3]=uart2_rx_buf[4]-'0';
-////        user_data[4]=uart2_rx_buf[5]-'0';
-////        user_data[5]=uart2_rx_buf[6]-'0';
-//        Store_Data[0]=uart2_rx_buf[1]-'0';
-//        Store_Data[1]=uart2_rx_buf[2]-'0';
-//        Store_Data[2]=uart2_rx_buf[3]-'0';
-//        Store_Data[3]=uart2_rx_buf[4]-'0';
-//        Store_Data[4]=uart2_rx_buf[5]-'0';
-//        Store_Data[5]=uart2_rx_buf[6]-'0';
-//        Store_Save();
-//    }
-//    else if(uart2_rx_buf[0]=='R')//修改管理员密码
-//    {
-//        Store_Admin[0]=uart2_rx_buf[1]-'0';
-//        Store_Admin[1]=uart2_rx_buf[2]-'0';
-//        Store_Admin[2]=uart2_rx_buf[3]-'0';
-//        Store_Admin[3]=uart2_rx_buf[4]-'0';
-//        Store_Admin[4]=uart2_rx_buf[5]-'0';
-//        Store_Admin[5]=uart2_rx_buf[6]-'0';
-//        Store_Save();
-//    }    
-//    uart2_rx_len=0;
-//    memset(uart2_rx_buf,0,sizeof(uart2_rx_buf));
-//}
-
 unsigned add_flag=0;//蓝牙发送添加、删除指纹标志  1：添加；2：删除
 
 void usart_disp(void)
@@ -1586,40 +1529,30 @@ void usart_disp(void)
             {
                 view=6;
                 add_flag=1;
+                //Add_FR();
                 HAL_UART_Transmit(&huart1,"Press",5,50);
-                
             }
       }
     }
     else if(uart1_rx_buf[0]=='D')//删除指纹
     {
-        //OLED_CLS();
         if(add_flag==0)
         {
-        if(ID_NUM_store==0)//录入指纹为空
-        {
-            //view=15;
-            HAL_UART_Transmit(&huart1,"Empty",5,50);
-        }
-        else 
-        {
-            //view=7;
-//            if((uart2_rx_buf[1])<='4'&&(uart2_rx_buf[1])>='2')
-//            {
-                add_flag=2;
-                Del_FR(uart1_rx_buf[1]-'0');
-//            }
-//            else
-//            {
-//                HAL_UART_Transmit(&huart2,"iderror",15,50);
-//            }
-        }
+            if(ID_NUM_store==0)//录入指纹为空
+            {
+                HAL_UART_Transmit(&huart1,"Empty",5,50);
+            }
+            else 
+            {
+                    add_flag=2;
+                    Del_FR(uart1_rx_buf[1]-'0');
+            }
       }
     }
     else if(uart1_rx_buf[0]=='O')//系统已上锁，点击开门
     {
         OLED_CLS();
-        SYN_FrameInfo(0,"[v7][m1][t5]解锁成功");
+        SYN_FrameInfo(0,"[v7][m1][t5]已开门，请上锁");
         view=1;
         HAL_Delay(1000);
     }
@@ -1632,13 +1565,6 @@ void usart_disp(void)
     }
     else if(uart1_rx_buf[0]=='U')//修改解锁密码
     {
-//        OLED_ShowStr(0,6,"User",2);//ID
-//        user_data[0]=uart2_rx_buf[1]-'0';
-//        user_data[1]=uart2_rx_buf[2]-'0';
-//        user_data[2]=uart2_rx_buf[3]-'0';
-//        user_data[3]=uart2_rx_buf[4]-'0';
-//        user_data[4]=uart2_rx_buf[5]-'0';
-//        user_data[5]=uart2_rx_buf[6]-'0';
         Store_Data[0]=uart1_rx_buf[1]-'0';
         Store_Data[1]=uart1_rx_buf[2]-'0';
         Store_Data[2]=uart1_rx_buf[3]-'0';
@@ -1674,10 +1600,4 @@ void usart1_disp(void)
            HAL_UART_Transmit(&huart1,"Open",4,50);
         }      
     }
-//    else
-//    {
-//       HAL_UART_Transmit(&huart2,'Open',10,50);
-//    }
-    //uart1_rx_len=0;
-    //memset(uart1_rx_buf,0,sizeof(uart1_rx_buf));
 }

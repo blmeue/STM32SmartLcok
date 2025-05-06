@@ -135,15 +135,13 @@ int main(void)
     
     //EEPROM初始化
     Store_Init(); 
-    
-    //HAL_UART_Receive_IT(&huart2, (uint8_t *)&receive_dat, 1); // 启动接收中断
-    
+        
     HAL_UART_Receive_IT(&huart3, (uint8_t *)&receive_dat, 1); // 启动串口接收中断
     
     //接收蓝牙发送的数据
     HAL_UART_Receive_IT(&huart1, (uint8_t *)&receive_dat1, 1); // 启动接收中断
         
-    HAL_TIM_Base_Start_IT(&htim3);
+    HAL_TIM_Base_Start_IT(&htim3);//打开定时器3中断
     //初始化指纹模块
     PS_StaGPIO_Init();
     
@@ -152,9 +150,6 @@ int main(void)
 //    Del_FR_Lib();
 
     OLED_CLS();
-    
-    //初始界面
-    //main_menu();
 
     //显示解锁密码和管理员密码
 //      for(uint16_t i=1;i<19;i++)
@@ -178,17 +173,6 @@ int main(void)
 //              OLED_ShowNum(0+16*(i-14),6,value1,2,16);
 //          }
 //      }
-
-    uint8_t res = 1;
-    printf("AS608指纹模块测试开始\r\n");
-	res = as608_init();
-	if(res == 0)
-	{
-		printf("AS608指纹模块初始化成功\r\n");
-	}
-	else
-		printf("AS608指纹模块初始化失败\r\n");
-    
     
   /* USER CODE END 2 */
 
@@ -205,6 +189,9 @@ int main(void)
       
       view_display();
       key_display();
+      //将门锁状态发送到APP上
+      //usart1_disp();
+      
       if(uart1_rx_len!=0)
       {
           int temp=uart1_rx_len;
@@ -212,64 +199,6 @@ int main(void)
           if(temp==uart1_rx_len)
               usart_disp();
       }
-      
-      //将门锁状态发送到APP上
-      //usart1_disp();
-      
-      
-	  //SYN_FrameInfo(2, "[v7][m1][t5]欢迎使用SYN6288");
-      
-	  //选择背景音乐2。(0：无背景音乐  1-15：背景音乐可选)
-		//m[0~16]:0背景音乐为静音，16背景音乐音量最大
-		//v[0~16]:0朗读音量为静音，16朗读音量最大
-		//t[0~5]:0朗读语速最慢，5朗读语速最快
-      
-		//其他不常用功能请参考数据手册
-	
-      //语音播报
-//      SYN_FrameInfo(2,"[v7][m1][t5]解锁失败，请重新尝试");
-//	    HAL_Delay(1000);
-//      HAL_Delay(1000);
-        
-
-      
-//      SYN_FrameInfo(2,"[v7][m1][t5]解锁失败，请重新尝试");
-//	    HAL_Delay(1000);
-//      
-//      if(uart1_rx_len!=0)
-//      {
-//          int temp=uart1_rx_len;
-//          HAL_Delay(2);
-//          if(temp==uart1_rx_len)
-//              usart1_disp();
-//      } 
-      
-      //key_show();
-      
-      //显示解锁密码和管理员密码
-//       for(uint16_t i=1;i<19;i++)
-//      {
-//          uint16_t value1 = MyFLASH_ReadHalfWord(STORE_START_ADDRESS+i*2);
-//         // uint16_t value2 = MyFLASH_ReadWord(STORE_ADMIN_ADDRESS+(i-1)*2);
-//          if(i<7){
-//            OLED_ShowNum(0+16*(i-1),0,value1,2,16);
-//            //OLED_ShowNum(0+16*(i-1),0,Store_Data[i-1],2,16);
-//          }
-//          else if(i>=7&&i<13)
-//          {
-//              OLED_ShowNum(0+16*(i-7),2,value1,2,16);
-//          }
-//          else if(i==13)
-//          {
-//              OLED_ShowNum(0+16*(i-13),4,value1,2,16);
-//          }
-//          else if(i>=14&&i<19)
-//          {
-//             // OLED_ShowNum(0+16*(i-14),6,value1,2,16);
-//              OLED_ShowNum(0+16*(i-14),6,value1,2,16);
-//          }
-//          //OLED_ShowNum(0+16*(i-1),2,value2,2,16);
-//      }
   }
   /* USER CODE END 3 */
 }
